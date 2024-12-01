@@ -65,15 +65,15 @@ export class AOC01 {
         let count = 1;
         for (let i = 1; i <= sortedInput.length; i++) {
             // on last loop, current = undefined, making sure we save the last occurrences amount!
-            // note: ewww, so current is actually typed number | undefined, but typescript trusts us...
-            // since js does not crash on accessing an array out of bounds, this is annoying
-            const current = sortedInput[i];
-            if (current === previous){
-                count ++;
+            const current: number | undefined = sortedInput[i];
+            if (current === previous) {
+                count++;
                 continue;
             }
 
-            occurrencesInSecondColumn.set(previous, count);
+            // This nullable suppression annotation is safe. previous gets set to undefined only in the
+            // last iteration of the loop
+            occurrencesInSecondColumn.set(previous!, count);
             count = 1;
             previous = current;
         }

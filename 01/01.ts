@@ -1,18 +1,26 @@
+import * as fs from 'fs';
+
 export class AOC01 {
     private _test: boolean = true;
     private _inputFile: string = this._test
-        ? 'testInput.txt'
-        : 'input.txt';
+        ? './01/testInput.txt'
+        : './01/input.txt';
 
-    public static partOne(): void {
+    private readInput() : void {
+        const data = fs.readFileSync(this._inputFile, 'utf-8');
+        console.log('File content:', data);
+    }
+
+    public partOne(): void {
         let message: string = 'Hello, yu!';
 
         //let message2: string = 4;
         console.log(message);
+        this.readInput();
     }
 
 
-    public static partTwo(): void {
+    public partTwo(): void {
         console.log("TODO");
     }
 }

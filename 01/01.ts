@@ -28,7 +28,16 @@ export class AOC01 {
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
-        console.log("TODO");
+        const parsedInput = this.parseInput(input);
+
+        const occurrencesInSecondColumn = this.constructOccurrencesMap(parsedInput.secondColumn);
+
+        let similarity = 0;
+        for (let i = 0; i < parsedInput.length; i++) {
+            similarity += (occurrencesInSecondColumn.get(parsedInput.firstColumn[i]) ?? 0) * parsedInput.firstColumn[i];
+        }
+
+        console.log(similarity);
     }
 
     private parseInput(input: string): { firstColumn: number[], secondColumn: number[], length: number } {
@@ -39,12 +48,35 @@ export class AOC01 {
         const firstColumn: number[] = [];
         const secondColumn: number[] = [];
         lines.forEach((line) => {
-            var numbers = line.split(/\s+/);
+            const numbers = line.split(/\s+/);
             firstColumn.push(parseInt(numbers[0]));
             secondColumn.push(parseInt(numbers[1]));
         })
 
         console.log('input parsed!')
         return {firstColumn, secondColumn, length: firstColumn.length};
+    }
+
+    private constructOccurrencesMap(input: number[]): Map<number, number> {
+        const sortedInput = [...input].sort();
+        const occurrencesInSecondColumn = new Map<number, number>();
+
+        let previous = sortedInput[0];
+        let count = 1;
+        for (let i = 1; i <= sortedInput.length; i++) {
+            // on last loop, current = undefined, making sure we save the last occurrences amount!
+            // note: ewww, so current is actually typed number | undefined, but typescript trusts us...
+            // since js does not crash on accessing an array out of bounds, this is annoying
+            const current = sortedInput[i];
+            if (current === previous){
+                count ++;
+                continue;
+            }
+
+            occurrencesInSecondColumn.set(previous, count);
+            count = 1;
+            previous = current;
+        }
+        return occurrencesInSecondColumn;
     }
 }

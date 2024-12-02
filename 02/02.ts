@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import {start} from "node:repl";
 
 export class AOC02 {
     private _day: string = '02';
@@ -60,7 +59,10 @@ export class AOC02 {
 
     private isSafe(report: number[], levelDampers: number): boolean {
         if (report.length <= 3) {
-            return Math.max(...report) - Math.min(...report) <= 3;
+            console.log("SHORT SEQUENCE: ")
+            const safe = Math.max(...report) - Math.min(...report) <= 3;
+            console.log(`${report} is ${safe}`)
+            return safe;
         }
 
         const isReportAscending = (input: number[]): boolean => {
@@ -91,10 +93,10 @@ export class AOC02 {
                 return false;
             }
             const reportWithoutLaterOffendingElement = report.filter((_, index) => index !== i + 1);
-            const whatHappensIfIRemoveLaterOffender = this.isLongReportSafe(reportWithoutLaterOffendingElement, levelDampers - 1, i, ascending);
+            const whatHappensIfIRemoveLaterOffender = this.isLongReportSafe(reportWithoutLaterOffendingElement, levelDampers - 1, 0, ascending);
 
             const reportWithoutFormerOffendingElement = report.filter((_, index) => index !== i);
-            const whatHappensIfIRemoveFormerOffender = this.isLongReportSafe(reportWithoutFormerOffendingElement, levelDampers - 1, i - 1, ascending);
+            const whatHappensIfIRemoveFormerOffender = this.isLongReportSafe(reportWithoutFormerOffendingElement, levelDampers - 1, 0, ascending);
 
             return whatHappensIfIRemoveLaterOffender || whatHappensIfIRemoveFormerOffender;
         }

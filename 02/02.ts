@@ -1,8 +1,9 @@
 import * as fs from 'fs';
+import {start} from "node:repl";
 
 export class AOC02 {
     private _day: string = '02';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -17,6 +18,8 @@ export class AOC02 {
         console.log('Solving part one...');
         const parsedInput = this.parseInput(input);
         let safeCount = 0;
+
+        console.log(this.isSafe([2, 1, 2, 5, 3, 4, 6], 1));
 
         parsedInput.forEach(report => {
             if (this.isSafe(report, 0)) {
@@ -35,6 +38,7 @@ export class AOC02 {
 
         parsedInput.forEach(report => {
             if (this.isSafe(report, 1)) {
+                //console.log(`${report} is safe!`)
                 safeCount++;
             }
         })
@@ -54,8 +58,31 @@ export class AOC02 {
         return parsedInput;
     }
 
-    private isSafe(report: number[], levelDampers: number, ascending?: boolean | undefined): boolean {
-        if (report.length <= 1) {
+    private isSafe(report: number[], levelDampers: number): boolean {
+        if (report.length <= 3) {
+            return Math.max(...report) - Math.min(...report) <= 3;
+        }
+
+        const isReportAscending = (input: number[]): boolean => {
+            let up = 0;
+            let down = 0;
+            for (let i = 0; i < 3; i++) {
+                const diff = input[i + 1] - input[i];
+                if (diff > 0) {
+                    up++;
+                } else {
+                    down++;
+                }
+            }
+            return up > down;
+        };
+
+        const isAscending = isReportAscending(report);
+        return this.isLongReportSafe(report, levelDampers, 0, isAscending);
+    }
+
+    private isLongReportSafe(report: number[], levelDampers: number, i: number, ascending: boolean): boolean {
+        if (report.length - 1 === i) {
             return true;
         }
 
@@ -63,11 +90,16 @@ export class AOC02 {
             if (levelDampers === 0) {
                 return false;
             }
-            levelDampers--;
-            return this.isSafe(report.slice(1), levelDampers, isAscending);
+            const reportWithoutLaterOffendingElement = report.filter((_, index) => index !== i + 1);
+            const whatHappensIfIRemoveLaterOffender = this.isLongReportSafe(reportWithoutLaterOffendingElement, levelDampers - 1, i, ascending);
+
+            const reportWithoutFormerOffendingElement = report.filter((_, index) => index !== i);
+            const whatHappensIfIRemoveFormerOffender = this.isLongReportSafe(reportWithoutFormerOffendingElement, levelDampers - 1, i - 1, ascending);
+
+            return whatHappensIfIRemoveLaterOffender || whatHappensIfIRemoveFormerOffender;
         }
 
-        const isAscending = report[0] < report[1];
+        const isAscending = report[i] < report[i + 1];
 
         if (ascending !== undefined && ascending !== isAscending) {
             return handleUnsafety();
@@ -75,21 +107,20 @@ export class AOC02 {
 
         // check monotonicity
         const breakCondition = isAscending
-            ? report[0] >= report[1]
-            : report[0] <= report[1];
+            ? report[i] >= report[i + 1]
+            : report[i] <= report[i + 1];
 
         if (breakCondition) {
             return handleUnsafety();
         }
 
         // check difference
-        const difference = Math.abs(report[0] - report[1]);
+        const difference = Math.abs(report[i] - report[i + 1]);
         if (difference > 3) {
             return handleUnsafety();
         }
 
-        // TODO check at home if I get a warning if I forget this return!
-        return this.isSafe(report.slice(1), levelDampers, isAscending);
+        return this.isLongReportSafe(report, levelDampers, i + 1, isAscending);
     }
 
 }

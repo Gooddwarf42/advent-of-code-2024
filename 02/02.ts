@@ -93,7 +93,7 @@ export class AOC02 {
                 return false;
             }
             const reportWithoutLaterOffendingElement = report.filter((_, index) => index !== i + 1);
-            const whatHappensIfIRemoveLaterOffender = this.isLongReportSafe(reportWithoutLaterOffendingElement, levelDampers - 1, 0, ascending);
+            const whatHappensIfIRemoveLaterOffender = this.isLongReportSafe(reportWithoutLaterOffendingElement, levelDampers - 1, i, ascending);
 
             const reportWithoutFormerOffendingElement = report.filter((_, index) => index !== i);
             const whatHappensIfIRemoveFormerOffender = this.isLongReportSafe(reportWithoutFormerOffendingElement, levelDampers - 1, 0, ascending);

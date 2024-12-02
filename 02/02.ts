@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC02 {
     private _day: string = '02';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -19,7 +19,7 @@ export class AOC02 {
         let safeCount = 0;
 
         parsedInput.forEach(report => {
-            if (this.isSafe(report)) {
+            if (this.isSafe(report, 0)) {
                 safeCount++;
             }
         })
@@ -30,7 +30,16 @@ export class AOC02 {
     public partTwo(input: string): void {
         console.log('Solving part two...');
 
-        console.log('TODO');
+        const parsedInput = this.parseInput(input);
+        let safeCount = 0;
+
+        parsedInput.forEach(report => {
+            if (this.isSafe(report, 1)) {
+                safeCount++;
+            }
+        })
+
+        console.log(safeCount);
     }
 
     private parseInput(input: string): Array<number[]> {
@@ -45,31 +54,42 @@ export class AOC02 {
         return parsedInput;
     }
 
-    private isSafe(report: number[]): boolean {
+    private isSafe(report: number[], levelDampers: number, ascending?: boolean | undefined): boolean {
         if (report.length <= 1) {
             return true;
         }
 
-        const isAscending = report[0] < report[1];
-        for (let i = 1; i < report.length; i++) {
-            // check monotonicity
-            const breakCondition = isAscending
-                ? report[i - 1] >= report[i]
-                : report[i - 1] <= report[i];
-
-            if (breakCondition) {
+        const handleUnsafety = (): boolean => {
+            if (levelDampers === 0) {
                 return false;
             }
-
-            // check difference
-            const difference = Math.abs(report[i - 1] - report[i]);
-            if (difference > 3) {
-                return false;
-            }
-
+            levelDampers--;
+            return this.isSafe(report.slice(1), levelDampers, isAscending);
         }
 
-        return true;
+        const isAscending = report[0] < report[1];
+
+        if (ascending !== undefined && ascending !== isAscending) {
+            return handleUnsafety();
+        }
+
+        // check monotonicity
+        const breakCondition = isAscending
+            ? report[0] >= report[1]
+            : report[0] <= report[1];
+
+        if (breakCondition) {
+            return handleUnsafety();
+        }
+
+        // check difference
+        const difference = Math.abs(report[0] - report[1]);
+        if (difference > 3) {
+            return handleUnsafety();
+        }
+
+        // TODO check at home if I get a warning if I forget this return!
+        return this.isSafe(report.slice(1), levelDampers, isAscending);
     }
 
 }

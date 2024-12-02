@@ -16,68 +16,60 @@ export class AOC02 {
     public partOne(input: string): void {
         console.log('Solving part one...');
         const parsedInput = this.parseInput(input);
-        parsedInput.firstColumn.sort();
-        parsedInput.secondColumn.sort();
+        let safeCount = 0;
 
-        let distance = 0;
-        for (let i = 0; i < parsedInput.length; i++) {
-            distance += Math.abs(parsedInput.firstColumn[i] - parsedInput.secondColumn[i])
-        }
+        parsedInput.forEach(report => {
+            if (this.isSafe(report)) {
+                safeCount++;
+            }
+        })
 
-        console.log(distance);
+        console.log(safeCount);
     }
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
-        const parsedInput = this.parseInput(input);
 
-        const occurrencesInSecondColumn = this.constructOccurrencesMap(parsedInput.secondColumn);
-
-        let similarity = 0;
-        for (let i = 0; i < parsedInput.length; i++) {
-            similarity += (occurrencesInSecondColumn.get(parsedInput.firstColumn[i]) ?? 0) * parsedInput.firstColumn[i];
-        }
-
-        console.log(similarity);
+        console.log('TODO');
     }
 
-    private parseInput(input: string): { firstColumn: number[], secondColumn: number[], length: number } {
-        // Yes, I know, I could have read the stream from the file one line at the time,
-        // but let me play around a bit first
+    private parseInput(input: string): Array<number[]> {
         const lines = input.split('\n');
 
-        const firstColumn: number[] = [];
-        const secondColumn: number[] = [];
+        const parsedInput: Array<number[]> = [];
         lines.forEach((line) => {
             const numbers = line.split(/\s+/);
-            firstColumn.push(parseInt(numbers[0]));
-            secondColumn.push(parseInt(numbers[1]));
+            parsedInput.push(numbers.map(s => parseInt(s)));
         })
-
         console.log('input parsed!')
-        return {firstColumn, secondColumn, length: firstColumn.length};
+        return parsedInput;
     }
 
-    private constructOccurrencesMap(input: number[]): Map<number, number> {
-        const sortedInput = [...input].sort();
-        const occurrencesInSecondColumn = new Map<number, number>();
+    private isSafe(report: number[]): boolean {
+        if (report.length <= 1) {
+            return true;
+        }
 
-        let previous = sortedInput[0];
-        let count = 1;
-        for (let i = 1; i <= sortedInput.length; i++) {
-            // on last loop, current = undefined, making sure we save the last occurrences amount!
-            const current: number | undefined = sortedInput[i];
-            if (current === previous) {
-                count++;
-                continue;
+        const isAscending = report[0] < report[1];
+        for (let i = 1; i < report.length; i++) {
+            // check monotonicity
+            const breakCondition = isAscending
+                ? report[i - 1] >= report[i]
+                : report[i - 1] <= report[i];
+
+            if (breakCondition) {
+                return false;
             }
 
-            // This nullable suppression annotation is safe. previous gets set to undefined only in the
-            // last iteration of the loop
-            occurrencesInSecondColumn.set(previous!, count);
-            count = 1;
-            previous = current;
+            // check difference
+            const difference = Math.abs(report[i - 1] - report[i]);
+            if (difference > 3) {
+                return false;
+            }
+
         }
-        return occurrencesInSecondColumn;
+
+        return true;
     }
+
 }

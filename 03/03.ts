@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC03 {
     private _day: string = '03';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -18,7 +18,12 @@ export class AOC03 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log('TODO');
+        let result = 0;
+        for (const multiplication of parsedInput) {
+            result += multiplication.first * multiplication.second;
+        }
+
+        console.log(result);
     }
 
     public partTwo(input: string): void {
@@ -28,9 +33,16 @@ export class AOC03 {
         console.log('TODO');
     }
 
-    private parseInput(input: string): string {
+    private parseInput(input: string): Array<{ first: number, second: number }> {
+        const parsedInput: Array<{ first: number, second: number }> = [];
 
-        return input;
+        const regex = /mul\((?<first>\d{1,3}),(?<second>\d{1,3})\)/g
+        const matches = input.matchAll(regex);
+        for (const match of matches) {
+            const first = parseInt(match.groups.first);
+            const second = parseInt(match.groups.second);
+            parsedInput.push({first, second});
+        }
+        return parsedInput;
     }
-
 }

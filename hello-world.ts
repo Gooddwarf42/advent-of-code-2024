@@ -1,5 +1,6 @@
 import {AOC01} from "./01/01";
 import {AOC02} from "./02/02";
+import {AOC03} from "./03/03";
 
 const welcomeMessage: string = 'I\'m running, rawr!!';
 //let message2: string = 4;

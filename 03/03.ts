@@ -19,7 +19,7 @@ export class AOC03 {
         const parsedInput = this.parseInput(input);
 
         let result = 0;
-        for (const multiplication of parsedInput) {
+        for (const multiplication of parsedInput.multiplications) {
             result += multiplication.first * multiplication.second;
         }
 
@@ -29,7 +29,7 @@ export class AOC03 {
     public partTwo(input: string): void {
         console.log('Solving part two...');
 
-        const parsedInput = this.parseInput2(input);
+        const parsedInput = this.parseInput(input);
 
         type FilterClause = (matchIndex: number) => boolean;
         const filterConditions: FilterClause[] = [];
@@ -44,7 +44,7 @@ export class AOC03 {
             filterConditions.push(condition);
         }
 
-        var filteredInput = parsedInput.multiplications.filter(mult => {
+        const filteredInput = parsedInput.multiplications.filter(mult => {
             for (const condition of filterConditions) {
                 if (condition(mult.index)) {
                     return false;
@@ -61,20 +61,11 @@ export class AOC03 {
         console.log(result);
     }
 
-    private parseInput(input: string): Array<{ first: number, second: number }> {
-        const parsedInput: Array<{ first: number, second: number }> = [];
-
-        const regex = /mul\((?<first>\d{1,3}),(?<second>\d{1,3})\)/g
-        const matches = input.matchAll(regex);
-        for (const match of matches) {
-            const first = parseInt(match.groups.first);
-            const second = parseInt(match.groups.second);
-            parsedInput.push({first, second});
-        }
-        return parsedInput;
-    }
-
-    private parseInput2(input: string): { multiplications: Array<{ first: number, second: number, index: number }>, doIndices: number[], dontIndices: number[] } {
+    private parseInput(input: string): {
+        multiplications: Array<{ first: number, second: number, index: number }>,
+        doIndices: number[],
+        dontIndices: number[]
+    } {
         const multiplications: Array<{ first: number, second: number, index: number }> = [];
         const doIndices: number[] = [-1];
         const dontIndices: number[] = [];
@@ -82,8 +73,8 @@ export class AOC03 {
         const multiplicationRegex = /mul\((?<first>\d{1,3}),(?<second>\d{1,3})\)/g
         const multiplicationMatches = input.matchAll(multiplicationRegex);
         for (const match of multiplicationMatches) {
-            const first = parseInt(match.groups.first);
-            const second = parseInt(match.groups.second);
+            const first = parseInt(match.groups!.first);
+            const second = parseInt(match.groups!.second);
             const index = match.index;
             multiplications.push({first, second, index});
         }

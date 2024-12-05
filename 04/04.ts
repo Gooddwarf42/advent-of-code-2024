@@ -27,7 +27,8 @@ export class AOC04 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+        const xMas = this.CountXMas(parsedInput);
+        console.log(xMas);
     }
 
     private parseInput(input: string): string[] {
@@ -37,7 +38,7 @@ export class AOC04 {
     private CountXmas(parsedInput: string[]): number {
         let count = 0;
 
-        const checkXmas = (i: number, j: number, horizontalOffset: 1 | 0 | -1, verticalOffset: 1 | 0 | -1): boolean => {
+        const isXmas = (i: number, j: number, horizontalOffset: 1 | 0 | -1, verticalOffset: 1 | 0 | -1): boolean => {
             return parsedInput[i + horizontalOffset]?.[j + verticalOffset] === 'M'
                 && parsedInput[i + 2 * horizontalOffset]?.[j + 2 * verticalOffset] === 'A'
                 && parsedInput[i + 3 * horizontalOffset]?.[j + 3 * verticalOffset] === 'S'
@@ -45,14 +46,14 @@ export class AOC04 {
 
         const countXmases = (i: number, j: number): number => {
             let count = 0;
-            count += +checkXmas(i, j, 1, 1);
-            count += +checkXmas(i, j, 1, 0);
-            count += +checkXmas(i, j, 1, -1);
-            count += +checkXmas(i, j, 0, 1);
-            count += +checkXmas(i, j, -1, 1);
-            count += +checkXmas(i, j, -1, 0);
-            count += +checkXmas(i, j, -1, -1);
-            count += +checkXmas(i, j, 0, -1);
+            count += +isXmas(i, j, 1, 1);
+            count += +isXmas(i, j, 1, 0);
+            count += +isXmas(i, j, 1, -1);
+            count += +isXmas(i, j, 0, 1);
+            count += +isXmas(i, j, -1, 1);
+            count += +isXmas(i, j, -1, 0);
+            count += +isXmas(i, j, -1, -1);
+            count += +isXmas(i, j, 0, -1);
             return count;
         };
 
@@ -60,6 +61,39 @@ export class AOC04 {
             for (let j = 0; j < parsedInput[i].length; j++) {
                 if (parsedInput[i][j] === 'X') {
                     count += countXmases(i, j);
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private CountXMas(parsedInput: string[]): number {
+        let count = 0;
+
+        const isXMas = (i: number, j: number): boolean => {
+            const topLeft = parsedInput[i - 1]?.[j - 1];
+            const topRight = parsedInput[i + 1]?.[j - 1];
+            const bottomLeft = parsedInput[i - 1]?.[j + 1];
+            const bottomRight = parsedInput[i + 1]?.[j + 1];
+
+            if (topLeft === undefined
+                || topRight === undefined
+                || bottomLeft === undefined
+                || bottomRight === undefined) {
+                return false;
+            }
+
+            const magicSequence = [topLeft, topRight, bottomRight, bottomLeft]
+            const magicString = magicSequence.concat(magicSequence).join('');
+
+            return magicString.includes("MMSS");
+        };
+
+        for (let i = 0; i < parsedInput.length; i++) {
+            for (let j = 0; j < parsedInput[i].length; j++) {
+                if (parsedInput[i][j] === 'A') {
+                    count += +isXMas(i, j);
                 }
             }
         }

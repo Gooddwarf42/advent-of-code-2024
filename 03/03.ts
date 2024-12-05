@@ -35,11 +35,7 @@ export class AOC03 {
         const filterConditions: FilterClause[] = [];
 
         for (const dontIndex of parsedInput.dontIndices) {
-            const grrrIHaveNoFisrtMethod = parsedInput.doIndices.filter(doIndex => doIndex > dontIndex);
-            const nextDoIndex = grrrIHaveNoFisrtMethod.length > 0
-                ? grrrIHaveNoFisrtMethod[0]
-                : input.length;
-
+            const nextDoIndex = parsedInput.doIndices.find(doIndex => doIndex > dontIndex) ?? input.length;
             const condition: FilterClause = (matchIndex: number) => matchIndex > dontIndex && matchIndex < nextDoIndex
             filterConditions.push(condition);
         }

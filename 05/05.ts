@@ -28,9 +28,20 @@ export class AOC05 {
         console.log('TODO');
     }
 
-    private parseInput(input: string): string {
+    private parseInput(input: string): Gigi {
 
-        return input;
+        const split = input.split('\n\n');
+        const rawRules = split[0];
+        const rawUpdates = split[1];
+
+        const rules = rawRules.split('\n').map<Rule>(line => {
+            const components = line.split('|').map(s => parseInt(s));
+            return {first: components[0], second: components[1]};
+        });
+        const updates = rawUpdates.split('\n').map<number[]>(line => line.split(',').map(s => parseInt(s)));
+        return {rules, updates};
     }
-
 }
+
+type Gigi = { rules: Rule[], updates: number[][] };
+type Rule = { first: number, second: number };

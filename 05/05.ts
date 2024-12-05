@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC05 {
     private _day: string = '05';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -18,7 +18,36 @@ export class AOC05 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log('TODO');
+        const isCorrect = (update: number[]): boolean => {
+            const indexes = new Map<number, number>();
+            for (const [index, pageNumber] of update.entries()) {
+                indexes.set(pageNumber, index);
+            }
+
+            for (const rule of parsedInput.rules) {
+                const firstIndex = indexes.get(rule.first);
+                const secondIndex = indexes.get(rule.second);
+                if (firstIndex === undefined
+                    || secondIndex === undefined
+                    || firstIndex < secondIndex) {
+                    continue;
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        let count = 0;
+        for (let i = 0; i < parsedInput.updates.length; i++) {
+            const update = parsedInput.updates[i];
+            if (isCorrect(update)) {
+                const middle = update[(update.length - 1) / 2];
+                count += middle;
+            }
+        }
+
+        console.log(count);
     }
 
     public partTwo(input: string): void {

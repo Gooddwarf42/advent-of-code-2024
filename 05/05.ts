@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC05 {
     private _day: string = '05';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -54,7 +54,48 @@ export class AOC05 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const rules = parsedInput.rules;
+
+        const rulesWithOccurrencesOnRight: (Rule & { rightOccurrences: number }) [] = [];
+        for (const rule of rules) {
+            const rightOccurrences = rules.filter(r => r.second === rule.first).length;
+            rulesWithOccurrencesOnRight.push({...rule, rightOccurrences});
+        }
+        console.log(rulesWithOccurrencesOnRight);
+
+        const theTruth: number [] = [];
+        let copyOfRules = [...rules];
+
+        while (copyOfRules.length > 0) {
+            console.log(copyOfRules)
+            let brokeOut = false;
+
+            if (copyOfRules.length === 1) {
+                theTruth.push(copyOfRules[0].first, copyOfRules[0].second);
+                console.log("done!");
+                break;
+            }
+
+            for (const rule of copyOfRules) {
+                const rightOccurrences = copyOfRules.filter(r => r.second === rule.first).length;
+                if (rightOccurrences === 0) {
+                    console.log(rule.first + 'is good!');
+                    theTruth.push(rule.first);
+                    copyOfRules = copyOfRules.filter(r => r.first !== rule.first);
+                    brokeOut = true;
+                    break;
+                }
+            }
+
+            if (!brokeOut) {
+                console.log('WTF');
+                console.log(copyOfRules);
+                break;
+            }
+        }
+
+        console.log(theTruth);
     }
 
     private parseInput(input: string): Gigi {

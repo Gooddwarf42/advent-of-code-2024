@@ -3,7 +3,7 @@ import * as Assert from "node:assert";
 
 export class AOC06 {
     private _day: string = '06';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -18,8 +18,37 @@ export class AOC06 {
         console.log('Solving part one...');
 
         const parsedInput = this.parseInput(input);
+        const startingPosition = findStart(parsedInput);
 
-        console.log(directionMap);
+        // inelegant, but will work for now
+        // I actually hate this, it throws away type checks, uugh
+        const visitedPositions: Set<string> = new Set([JSON.stringify(startingPosition)]);
+
+        const guard = {direction: 'U' as Direction, position: startingPosition};
+
+        while (true) {
+            const movement = directionMap.get(guard.direction)!;
+            const nextCoordinates = {
+                x: guard.position.x + movement.horMovement,
+                y: guard.position.y + movement.verMovement
+            };
+            const whatIHaveInFront = parsedInput?.[nextCoordinates.x]?.[nextCoordinates.y] as PossibleCharacters | undefined;
+
+            if (whatIHaveInFront === '#') {
+                guard.direction = nextDirection(guard.direction);
+                continue;
+            }
+
+            visitedPositions.add(JSON.stringify(guard.position))
+            if (whatIHaveInFront === undefined) {
+                // map was exited
+                break;
+            }
+
+            guard.position = nextCoordinates;
+        }
+
+        console.log(visitedPositions.size);
     }
 
     public partTwo(input: string): void {
@@ -34,6 +63,7 @@ export class AOC06 {
     }
 }
 
+type PossibleCharacters = '.' | '#' | '^';
 type Direction = 'U' | 'R' | 'D' | 'L';
 const directionMap: Map<Direction, { horMovement: number, verMovement: number }> = new Map([
     ['U', {horMovement: -1, verMovement: 0}],
@@ -58,3 +88,14 @@ const nextDirection = (direction: Direction): Direction => {
             throw new Error('There is surely a better way to do this, I need to see how it\'s done at work');
     }
 };
+
+const findStart = (input: string[]): { x: number, y: number } => {
+    for (let i = 0; i < input.length; i++) {
+        for (let j = 0; j < input[i].length; j++) {
+            if (input[i][j] === '^') {
+                return {x: i, y: j};
+            }
+        }
+    }
+    throw new Error('start not found!');
+}

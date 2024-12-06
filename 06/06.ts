@@ -28,9 +28,8 @@ export class AOC06 {
         console.log('TODO');
     }
 
-    private parseInput(input: string): string {
-
-        return input;
+    private parseInput(input: string): string[] {
+        return input.split("\n");
     }
 
 }

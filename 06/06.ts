@@ -1,6 +1,4 @@
 import * as fs from 'fs';
-import * as Assert from "node:assert";
-import {Dir} from "node:fs";
 
 export class AOC06 {
     private _day: string = '06';
@@ -90,12 +88,9 @@ export class AOC06 {
             // I have in front a free tile. Woudl I loop if i put an obstacle there?
 
             const hypotheticalGuard = {direction: rotateLeft(guard.direction), position: {...guard.position}};
+            hypotheticalGuard.position.moving = hypotheticalGuard.direction; // eeewwwww I have very ill data types here...
+            const hypotheticalTraceMap: DirectionFlag[][] = JSON.parse(JSON.stringify(traceMap));
             while (true) {
-                if ((traceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] & hypotheticalGuard.direction) !== 0) {
-                    loopables++;
-                    break;
-                }
-
                 const loopCheckMovement = directionFlagMap.get(hypotheticalGuard.direction)!;
                 const loopCheckNextCoordinates = {
                     x: hypotheticalGuard.position.x + loopCheckMovement.horMovement,
@@ -107,6 +102,13 @@ export class AOC06 {
                     const loopChecknextDirection = rotateLeft<DirectionFlag>(hypotheticalGuard.direction);
                     hypotheticalGuard.direction = loopChecknextDirection;
                     hypotheticalGuard.position.moving = loopChecknextDirection;
+
+                    if ((hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] & hypotheticalGuard.direction) !== 0) {
+                        loopables++;
+                        break;
+                    }
+
+                    hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] |= hypotheticalGuard.position.moving;
                     continue;
                 }
 
@@ -117,6 +119,13 @@ export class AOC06 {
 
                 hypotheticalGuard.position.x = loopCheckNextCoordinates.x;
                 hypotheticalGuard.position.y = loopCheckNextCoordinates.y;
+
+                if ((hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] & hypotheticalGuard.direction) !== 0) {
+                    loopables++;
+                    break;
+                }
+
+                hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] |= hypotheticalGuard.position.moving
             }
 
             guard.position.x = nextCoordinates.x;

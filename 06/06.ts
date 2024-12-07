@@ -3,7 +3,7 @@ import * as Assert from "node:assert";
 
 export class AOC06 {
     private _day: string = '06';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -54,8 +54,52 @@ export class AOC06 {
     public partTwo(input: string): void {
         console.log('Solving part two...');
 
+        type PositionInfo = { x: number, y: number, moving: Direction }
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+        const startingPosition = {...findStart(parsedInput), moving: 'U'} as PositionInfo;
+
+        // inelegant, but will work for now
+        // I actually hate this, it throws away type checks, uugh
+        const visitedPositions: Set<string> = new Set([JSON.stringify(startingPosition)]);
+
+        const guard = {direction: 'U' as Direction, position: startingPosition};
+
+        let loopables = 0;
+
+        while (true) {
+            const movement = directionMap.get(guard.direction)!;
+            const nextCoordinates = {
+                x: guard.position.x + movement.horMovement,
+                y: guard.position.y + movement.verMovement
+            };
+            const whatIHaveInFront = parsedInput?.[nextCoordinates.x]?.[nextCoordinates.y] as PossibleCharacters | undefined;
+
+            if (whatIHaveInFront === '#') {
+                const nextDirectionn = nextDirection(guard.direction);
+                guard.direction = nextDirectionn;
+                guard.position.moving =  nextDirectionn;
+                continue;
+            }
+
+            visitedPositions.add(JSON.stringify(guard.position))
+            if (whatIHaveInFront === undefined) {
+                // map was exited
+                break;
+            }
+
+            // I have in front a free tile. Woudl I loop if i put an obstacle there?
+            const loopingPosition = {...guard.position} as PositionInfo;
+            loopingPosition.moving = nextDirection(loopingPosition.moving);
+
+            if (visitedPositions.has(JSON.stringify(loopingPosition))) {
+                loopables++;
+            }
+
+            guard.position.x = nextCoordinates.x;
+            guard.position.y = nextCoordinates.y;
+        }
+
+        console.log(loopables);
     }
 
     private parseInput(input: string): string[] {

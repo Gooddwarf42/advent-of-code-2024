@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as Assert from "node:assert";
+import {Dir} from "node:fs";
 
 export class AOC06 {
     private _day: string = '06';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -54,20 +55,19 @@ export class AOC06 {
     public partTwo(input: string): void {
         console.log('Solving part two...');
 
-        type PositionInfo = { x: number, y: number, moving: Direction }
+        type PositionInfo = { x: number, y: number, moving: DirectionFlag }
         const parsedInput = this.parseInput(input);
-        const startingPosition = {...findStart(parsedInput), moving: 'U'} as PositionInfo;
+        const startingPosition = {...findStart(parsedInput), moving: DirectionFlag.U} as PositionInfo;
 
-        // inelegant, but will work for now
-        // I actually hate this, it throws away type checks, uugh
-        const visitedPositions: Set<string> = new Set([JSON.stringify(startingPosition)]);
+        const traceMap: DirectionFlag[][] = Array.from({length: parsedInput.length}, () => Array(parsedInput[0].length).fill(DirectionFlag.NONE));
 
-        const guard = {direction: 'U' as Direction, position: startingPosition};
+        const guard = {direction: DirectionFlag.U, position: startingPosition};
+        traceMap[startingPosition.x][startingPosition.y] |= startingPosition.moving;
 
         let loopables = 0;
 
         while (true) {
-            const movement = directionMap.get(guard.direction)!;
+            const movement = directionFlagMap.get(guard.direction)!;
             const nextCoordinates = {
                 x: guard.position.x + movement.horMovement,
                 y: guard.position.y + movement.verMovement
@@ -75,28 +75,53 @@ export class AOC06 {
             const whatIHaveInFront = parsedInput?.[nextCoordinates.x]?.[nextCoordinates.y] as PossibleCharacters | undefined;
 
             if (whatIHaveInFront === '#') {
-                const nextDirectionn = nextDirection(guard.direction);
-                guard.direction = nextDirectionn;
-                guard.position.moving =  nextDirectionn;
+                const nextDirection = rotateLeft<DirectionFlag>(guard.direction);
+                guard.direction = nextDirection;
+                guard.position.moving = nextDirection;
+                traceMap[guard.position.x][guard.position.y] |= guard.position.moving;
                 continue;
             }
 
-            visitedPositions.add(JSON.stringify(guard.position))
             if (whatIHaveInFront === undefined) {
                 // map was exited
                 break;
             }
 
             // I have in front a free tile. Woudl I loop if i put an obstacle there?
-            const loopingPosition = {...guard.position} as PositionInfo;
-            loopingPosition.moving = nextDirection(loopingPosition.moving);
 
-            if (visitedPositions.has(JSON.stringify(loopingPosition))) {
-                loopables++;
+            const hypotheticalGuard = {direction: rotateLeft(guard.direction), position: {...guard.position}};
+            while (true) {
+                if ((traceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] & hypotheticalGuard.direction) !== 0) {
+                    loopables++;
+                    break;
+                }
+
+                const loopCheckMovement = directionFlagMap.get(hypotheticalGuard.direction)!;
+                const loopCheckNextCoordinates = {
+                    x: hypotheticalGuard.position.x + loopCheckMovement.horMovement,
+                    y: hypotheticalGuard.position.y + loopCheckMovement.verMovement
+                };
+                const loopCheckWhatIHaveInFront = parsedInput?.[loopCheckNextCoordinates.x]?.[loopCheckNextCoordinates.y] as PossibleCharacters | undefined;
+
+                if (loopCheckWhatIHaveInFront === '#') {
+                    const loopChecknextDirection = rotateLeft<DirectionFlag>(hypotheticalGuard.direction);
+                    hypotheticalGuard.direction = loopChecknextDirection;
+                    hypotheticalGuard.position.moving = loopChecknextDirection;
+                    continue;
+                }
+
+                if (loopCheckWhatIHaveInFront === undefined) {
+                    // map was exited
+                    break;
+                }
+
+                hypotheticalGuard.position.x = loopCheckNextCoordinates.x;
+                hypotheticalGuard.position.y = loopCheckNextCoordinates.y;
             }
 
             guard.position.x = nextCoordinates.x;
             guard.position.y = nextCoordinates.y;
+            traceMap[guard.position.x][guard.position.y] |= guard.position.moving
         }
 
         console.log(loopables);
@@ -143,3 +168,39 @@ const findStart = (input: string[]): { x: number, y: number } => {
     }
     throw new Error('start not found!');
 }
+
+// dropping additional stuff here that I need for part 2
+enum DirectionFlag {
+    NONE = 0,
+    U = 0b0001,
+    R = 0b0010,
+    D = 0b0100,
+    L = 0b1000
+}
+
+function rotateLeft<T extends number>(value: T, shift: number = 1, width: number = 4): T {
+    const rotated =
+        (
+            (value << shift)
+            | (value >>> (width - shift))
+        )
+        & ((1 << width) - 1);
+    return rotated as T;
+}
+
+function rotateRight<T extends number>(value: T, shift: number = 1, width: number = 4): T {
+    const rotated =
+        (
+            (value >>> shift)
+            | (value << (width - shift))
+        )
+        & ((1 << width) - 1);
+    return rotated as T;
+}
+
+const directionFlagMap: Map<DirectionFlag, { horMovement: number, verMovement: number }> = new Map([
+    [DirectionFlag.U, {horMovement: -1, verMovement: 0}],
+    [DirectionFlag.R, {horMovement: 0, verMovement: 1}],
+    [DirectionFlag.D, {horMovement: 1, verMovement: 0}],
+    [DirectionFlag.L, {horMovement: 0, verMovement: -1}],
+]);

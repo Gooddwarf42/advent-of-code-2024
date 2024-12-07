@@ -18,9 +18,12 @@ export class AOC07 {
 
         const parsedInput = this.parseInput(input);
 
+        const add = (a: number, b: number): number => a + b;
+        const multiply = (a: number, b: number): number => a * b;
+
         let count = 0;
         for (const line of parsedInput) {
-            if (this.isSolvable(line.goal, line.operands)) {
+            if (this.isSolvable(line.goal, line.operands, [add, multiply])) {
                 count += line.goal;
             }
         }
@@ -33,9 +36,13 @@ export class AOC07 {
 
         const parsedInput = this.parseInput(input);
 
+        const add = (a: number, b: number): number => a + b;
+        const multiply = (a: number, b: number): number => a * b;
+        const concat = (a: number, b: number): number => parseInt(`${a}${b}`);
+
         let count = 0;
         for (const line of parsedInput) {
-            if (this.isSolvable2(line.goal, line.operands)) {
+            if (this.isSolvable(line.goal, line.operands, [add, multiply, concat])) {
                 count += line.goal;
             }
         }
@@ -59,8 +66,7 @@ export class AOC07 {
     }
 
 
-    // TODO introcude a factory of values and just use one method
-    private isSolvable(goal: number, operands: number[]): boolean {
+    private isSolvable(goal: number, operands: number[], operators: ((first: number, second: number) => number)[]): boolean {
         if (operands.length < 2) {
             throw Error("BAD INPUT!");
         }
@@ -69,41 +75,19 @@ export class AOC07 {
             return false;
         }
 
-        const add = operands[0] + operands[1];
-        const multiply = operands[0] * operands[1];
+        const newFirstOperands = operators.map(op => op(operands[0], operands[1]));
 
         if (operands.length === 2) {
-            return goal === add
-                || goal === multiply;
+            return newFirstOperands.includes(goal);
         }
 
         const tail = operands.slice(2);
-        return this.isSolvable(goal, [add, ...tail])
-            || this.isSolvable(goal, [multiply, ...tail]);
-    }
 
-    private isSolvable2(goal: number, operands: number[]): boolean {
-        if (operands.length < 2) {
-            throw Error("BAD INPUT!");
+        for (const newFirstOperand of newFirstOperands) {
+            if (this.isSolvable(goal, [newFirstOperand, ...tail], operators)) {
+                return true;
+            }
         }
-
-        if (operands[0] > goal) {
-            return false;
-        }
-
-        const add = operands[0] + operands[1];
-        const multiply = operands[0] * operands[1];
-        const concat = parseInt(`${operands[0]}${operands[1]}`);
-
-        if (operands.length === 2) {
-            return goal === add
-                || goal === multiply
-                || goal === concat;
-        }
-
-        const tail = operands.slice(2);
-        return this.isSolvable2(goal, [add, ...tail])
-            || this.isSolvable2(goal, [multiply, ...tail])
-            || this.isSolvable2(goal, [concat, ...tail]);
+        return false;
     }
 }

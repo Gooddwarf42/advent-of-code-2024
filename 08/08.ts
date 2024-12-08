@@ -99,24 +99,23 @@ export class AOC08 {
             throw Error('BAD INPUT');
         }
 
-        if (antennaCoordinates.length === 2) {
-            const rowDifference = antennaCoordinates[1].x - antennaCoordinates[0].x;
-            const colDifference = antennaCoordinates[1].y - antennaCoordinates[0].y;
-            return [
-                {x: antennaCoordinates[0].x - rowDifference, y: antennaCoordinates[0].y - colDifference},
-                {x: antennaCoordinates[1].x + rowDifference, y: antennaCoordinates[1].y + colDifference}
-            ];
+        if (antennaCoordinates.length !== 2) {
+            const antinodes: Coordinate[] = [];
+            const tail = antennaCoordinates.slice(1);
+            antinodes.push(...this.getAntinodes(tail));
+            for (const item of tail) {
+                antinodes.push(...this.getAntinodes([antennaCoordinates[0], item]));
+            }
+            return antinodes;
         }
 
-        const antinodes: Coordinate[] = [];
-
-        const tail = antennaCoordinates.slice(1);
-        antinodes.push(...this.getAntinodes(tail));
-        for (const item of tail) {
-            antinodes.push(...this.getAntinodes([antennaCoordinates[0], item]));
-        }
-
-        return antinodes;
+        // here antennaCoordinates.length === 2
+        const rowDifference = antennaCoordinates[1].x - antennaCoordinates[0].x;
+        const colDifference = antennaCoordinates[1].y - antennaCoordinates[0].y;
+        return [
+            {x: antennaCoordinates[0].x - rowDifference, y: antennaCoordinates[0].y - colDifference},
+            {x: antennaCoordinates[1].x + rowDifference, y: antennaCoordinates[1].y + colDifference}
+        ];
     }
 
     private getAntinodes2(antennaCoordinates: Coordinate[], rowBound: number, colBound: number): Coordinate[] {
@@ -125,46 +124,42 @@ export class AOC08 {
             throw Error('BAD INPUT');
         }
 
-        if (antennaCoordinates.length === 2) {
-            // meat of the logic is here.
-            // yes, it is ugly styled.
-            // no, I don't care right now.
-            const rowDifference = antennaCoordinates[1].x - antennaCoordinates[0].x;
-            const colDifference = antennaCoordinates[1].y - antennaCoordinates[0].y;
-
-            const differenceGcd = gcd(rowDifference, colDifference);
-
-            const simplifiedRowDifference = rowDifference / differenceGcd;
-            const simplifiedColDifference = colDifference / differenceGcd;
-
-            let position = {...antennaCoordinates[0]};
+        if (antennaCoordinates.length !== 2) {
             const antinodes: Coordinate[] = [];
-
-            while (!isOutOfBounds(position, rowBound, colBound)) {
-                antinodes.push({...position})
-                position.x -= simplifiedRowDifference;
-                position.y -= simplifiedColDifference;
+            const tail = antennaCoordinates.slice(1);
+            antinodes.push(...this.getAntinodes2(tail, rowBound, colBound));
+            for (const item of tail) {
+                antinodes.push(...this.getAntinodes2([antennaCoordinates[0], item], rowBound, colBound));
             }
-
-            position = {...antennaCoordinates[0]};
-            position.x += simplifiedRowDifference;
-            position.y += simplifiedColDifference;
-
-            while (!isOutOfBounds(position, rowBound, colBound)) {
-                antinodes.push({...position})
-                position.x += simplifiedRowDifference;
-                position.y += simplifiedColDifference;
-            }
-
             return antinodes;
         }
 
+        // here antennaCoordinates.length === 2
+        const rowDifference = antennaCoordinates[1].x - antennaCoordinates[0].x;
+        const colDifference = antennaCoordinates[1].y - antennaCoordinates[0].y;
+
+        const differenceGcd = gcd(rowDifference, colDifference);
+
+        const simplifiedRowDifference = rowDifference / differenceGcd;
+        const simplifiedColDifference = colDifference / differenceGcd;
+
+        let position = {...antennaCoordinates[0]};
         const antinodes: Coordinate[] = [];
 
-        const tail = antennaCoordinates.slice(1);
-        antinodes.push(...this.getAntinodes2(tail, rowBound, colBound));
-        for (const item of tail) {
-            antinodes.push(...this.getAntinodes2([antennaCoordinates[0], item], rowBound, colBound));
+        while (!isOutOfBounds(position, rowBound, colBound)) {
+            antinodes.push({...position})
+            position.x -= simplifiedRowDifference;
+            position.y -= simplifiedColDifference;
+        }
+
+        position = {...antennaCoordinates[0]};
+        position.x += simplifiedRowDifference;
+        position.y += simplifiedColDifference;
+
+        while (!isOutOfBounds(position, rowBound, colBound)) {
+            antinodes.push({...position})
+            position.x += simplifiedRowDifference;
+            position.y += simplifiedColDifference;
         }
 
         return antinodes;

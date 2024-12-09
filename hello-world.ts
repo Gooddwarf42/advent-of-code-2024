@@ -5,11 +5,12 @@ import {AOC04} from "./04/04";
 import {AOC05} from "./05/05";
 import {AOC07} from "./07/07";
 import {AOC08} from "./08/08";
+import {AOC09} from "./09/09";
 
 const welcomeMessage: string = 'I\'m running, rawr!!';
 //let message2: string = 4;
 console.log(welcomeMessage);
-const puzzle = new AOC08();
+const puzzle = new AOC09();
 const input = puzzle.readInput();
 puzzle.partOne(input);
 puzzle.partTwo(input);

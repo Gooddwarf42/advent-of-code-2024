@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC09 {
     private _day: string = '09';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -62,7 +62,41 @@ export class AOC09 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const isSpotAvailable = (blockToAllocate: AllocationInfo, allocationBlockCandidate: AllocationInfo): boolean =>
+            allocationBlockCandidate.fileId === null
+            && allocationBlockCandidate.blockLength >= blockToAllocate.blockLength;
+
+        let i = parsedInput.length - 1;
+        while (i > 0) {
+            const currentAllocationBlock = parsedInput[i];
+            if (currentAllocationBlock.fileId === null) {
+                i--;
+                continue;
+            }
+
+            // this is actually a valid file, check if we have room for it somewhere earlier
+            const availableSpot = parsedInput.find(allocationBlock => isSpotAvailable(currentAllocationBlock, allocationBlock));
+            const availableSpotIndex = parsedInput.findIndex(allocationBlock => isSpotAvailable(currentAllocationBlock, allocationBlock));
+
+            if (availableSpot === undefined || availableSpotIndex > i) {
+                i--;
+                continue;
+            }
+            //We have to move the file in the available spot!
+            availableSpot.blockLength -= currentAllocationBlock.blockLength;
+
+            const shouldRemoveAllocationBlock = availableSpot.blockLength === 0;
+
+            const newAllocationBlock = {...currentAllocationBlock};
+            parsedInput.splice(availableSpotIndex, shouldRemoveAllocationBlock ? 1 : 0, newAllocationBlock);
+            currentAllocationBlock.fileId = null;
+            if (!shouldRemoveAllocationBlock) {
+                i--;
+            }
+        }
+
+        console.log(diskCheckSum(parsedInput));
     }
 
     private parseInput(input: string): AllocationInfo[] {

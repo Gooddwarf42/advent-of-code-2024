@@ -18,7 +18,17 @@ export class AOC10 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log('TODO');
+        let count = 0;
+        for (let i = 0; i < parsedInput.length; i++) {
+            for (let j = 0; j < parsedInput[i].length; j++) {
+                if (parsedInput[i][j] === '9') {
+                    const trailStarts = this.countTrails(9, i, j);
+                    count += trailStarts.length;
+                }
+            }
+        }
+
+        console.log(count);
     }
 
     public partTwo(input: string): void {
@@ -30,7 +40,10 @@ export class AOC10 {
 
     private parseInput(input: string): string[] {
 
-        return input.split('n');
+        return input.split('\n');
     }
 
+    private countTrails(height: number, i: number, j: number): { x: number, y: number }[] {
+        return [];
+    }
 }

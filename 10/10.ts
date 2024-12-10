@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC10 {
     private _day: string = '10';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -21,10 +21,9 @@ export class AOC10 {
         let count = 0;
         for (let i = 0; i < parsedInput.length; i++) {
             for (let j = 0; j < parsedInput[i].length; j++) {
-                if (parsedInput[i][j] === '9') {
-                    const trailStarts = this.countTrails(9, i, j);
-                    count += trailStarts.length;
-                }
+                const coordinates = {x: i, y: j} as Coordinate;
+                const trailStarts = this.getTrailsToHere(9, coordinates, parsedInput);
+                count += trailStarts.length;
             }
         }
 
@@ -43,7 +42,43 @@ export class AOC10 {
         return input.split('\n');
     }
 
-    private countTrails(height: number, i: number, j: number): { x: number, y: number }[] {
-        return [];
+    private getTrailsToHere(height: number, coordinate: Coordinate, parsedInput: string[]): Coordinate[] {
+        if (isOutOfBounds(coordinate, parsedInput.length, parsedInput[0].length)) {
+            return [];
+        }
+
+        if (parsedInput[coordinate.x][coordinate.y] !== height.toString()) {
+            return [];
+        }
+
+        if (height === 0) {
+            return [coordinate];
+        }
+
+        const trails =
+            this.getTrailsToHere(height - 1, move(coordinate, 1, 0), parsedInput)
+                .concat(this.getTrailsToHere(height - 1, move(coordinate, 0, 1), parsedInput))
+                .concat(this.getTrailsToHere(height - 1, move(coordinate, -1, 0), parsedInput))
+                .concat(this.getTrailsToHere(height - 1, move(coordinate, 0, -1), parsedInput));
+
+        const distinctTrails = trails.reduce((acc, current, index) => {
+            if (!acc.some(item => item.x === current.x && item.y === current.y)) {
+                acc.push(current);
+            }
+            return acc;
+        }, [] as Coordinate[]);
+
+        return distinctTrails;
     }
+}
+
+type Coordinate = { x: number; y: number };
+
+function move(coordinate: Coordinate, xOffset: 1 | 0 | -1, yOffset: 1 | 0 | -1): Coordinate {
+    return {x: coordinate.x + xOffset, y: coordinate.y + yOffset};
+}
+
+function isOutOfBounds(coordinate: Coordinate, rows: number, columns: number): boolean {
+    return coordinate.x < 0 || coordinate.x >= rows
+        || coordinate.y < 0 || coordinate.y >= columns;
 }

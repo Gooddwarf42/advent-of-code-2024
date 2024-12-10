@@ -90,13 +90,15 @@ export class AOC06 {
             const hypotheticalGuard = {direction: rotateLeft(guard.direction), position: {...guard.position}};
             hypotheticalGuard.position.moving = hypotheticalGuard.direction; // eeewwwww I have very ill data types here...
             const hypotheticalTraceMap: DirectionFlag[][] = JSON.parse(JSON.stringify(traceMap));
+            const hypotheticalMap: string[] = JSON.parse(JSON.stringify(parsedInput));
+            hypotheticalMap[nextCoordinates.x] = hypotheticalMap[nextCoordinates.x].split('').splice(nextCoordinates.y, 1, '#').join('');
             while (true) {
                 const loopCheckMovement = directionFlagMap.get(hypotheticalGuard.direction)!;
                 const loopCheckNextCoordinates = {
                     x: hypotheticalGuard.position.x + loopCheckMovement.horMovement,
                     y: hypotheticalGuard.position.y + loopCheckMovement.verMovement
                 };
-                const loopCheckWhatIHaveInFront = parsedInput?.[loopCheckNextCoordinates.x]?.[loopCheckNextCoordinates.y] as PossibleCharacters | undefined;
+                const loopCheckWhatIHaveInFront = hypotheticalMap?.[loopCheckNextCoordinates.x]?.[loopCheckNextCoordinates.y] as PossibleCharacters | undefined;
 
                 if (loopCheckWhatIHaveInFront === '#') {
                     const loopChecknextDirection = rotateLeft<DirectionFlag>(hypotheticalGuard.direction);

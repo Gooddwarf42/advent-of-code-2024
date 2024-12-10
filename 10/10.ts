@@ -34,7 +34,17 @@ export class AOC10 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        let count = 0;
+        for (let i = 0; i < parsedInput.length; i++) {
+            for (let j = 0; j < parsedInput[i].length; j++) {
+                const coordinates = {x: i, y: j} as Coordinate;
+                const trailStarts = this.getTrailsToHere2(9, coordinates, parsedInput);
+                count += trailStarts.length;
+            }
+        }
+
+        console.log(count);
     }
 
     private parseInput(input: string): string[] {
@@ -69,6 +79,28 @@ export class AOC10 {
         }, [] as Coordinate[]);
 
         return distinctTrails;
+    }
+
+    private getTrailsToHere2(height: number, coordinate: Coordinate, parsedInput: string[]): Coordinate[] {
+        if (isOutOfBounds(coordinate, parsedInput.length, parsedInput[0].length)) {
+            return [];
+        }
+
+        if (parsedInput[coordinate.x][coordinate.y] !== height.toString()) {
+            return [];
+        }
+
+        if (height === 0) {
+            return [coordinate];
+        }
+
+        const trails =
+            this.getTrailsToHere2(height - 1, move(coordinate, 1, 0), parsedInput)
+                .concat(this.getTrailsToHere2(height - 1, move(coordinate, 0, 1), parsedInput))
+                .concat(this.getTrailsToHere2(height - 1, move(coordinate, -1, 0), parsedInput))
+                .concat(this.getTrailsToHere2(height - 1, move(coordinate, 0, -1), parsedInput));
+
+        return trails;
     }
 }
 

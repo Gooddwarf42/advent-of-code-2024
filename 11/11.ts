@@ -15,9 +15,7 @@ export class AOC11 {
 
     public partOne(input: string): void {
         console.log('Solving part one...');
-
         const parsedInput = this.parseInput(input);
-
 
         const rule1: Rule = {
             condition: ruleInput => ruleInput === 0,
@@ -42,9 +40,27 @@ export class AOC11 {
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
-
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const rule1: Rule = {
+            condition: ruleInput => ruleInput === 0,
+            effect: () => [1]
+        };
+        const rule2: Rule = {
+            condition: ruleInput => ruleInput.toString().length % 2 === 0,
+            effect: (ruleInput) => [
+                parseInt(ruleInput.toString().substring(0, ruleInput.toString().length / 2)),
+                parseInt(ruleInput.toString().substring(ruleInput.toString().length / 2)),
+            ]
+        };
+        const rule3: Rule = {
+            condition: () => true,
+            effect: (ruleInput) => [ruleInput * 2024]
+        };
+
+        const rules = [rule1, rule2, rule3];
+
+        console.log(this.blink(parsedInput, rules, 75).length);
     }
 
     private parseInput(input: string): number[] {
@@ -53,6 +69,8 @@ export class AOC11 {
     }
 
     private blink(input: number[], rules: Rule[], times: number): number[] {
+        const start = performance.now();
+
         let result = [...input];
         for (let i = 0; i < times; i++) {
             result = result.reduce((acc, curr) => {
@@ -60,7 +78,15 @@ export class AOC11 {
                     return acc.concat(applicableRule!.effect(curr));
                 }, []
             );
+
+            if ((i + 1) % 5 === 0) {
+                const end = performance.now();
+                console.log(`"blinked ${i + 1} times. Length is ${result.length} ElapsedTime: ${end - start}ms`);
+            }
         }
+
+        const end = performance.now();
+        console.log(`"blinked ${times} times. ElapsedTime: ${end - start}ms`);
         return result;
     }
 

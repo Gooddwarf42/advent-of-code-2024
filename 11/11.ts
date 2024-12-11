@@ -96,3 +96,53 @@ type Rule = {
     condition: (ruleInput: number) => boolean,
     effect: (ruleInput: number) => number[]
 };
+
+class ScientificNotationNumber {
+    public base: number;
+    public exponent: number;
+
+    constructor(base: number, exponent: number) {
+        if (base < 0.1 || base >= 1) {
+            throw new RangeError("base should be between 0.1 and 1");
+        }
+        this.base = base;
+        this.exponent = exponent;
+    }
+
+    public static toScientificNotationNumber(normalNumber: number): ScientificNotationNumber {
+        let base = normalNumber
+        let exponent = 0;
+        while (base >= 1) {
+            base = base / 10;
+            exponent++;
+        }
+        while (base < 0.1) {
+            base = base * 10;
+            exponent--;
+        }
+        return new ScientificNotationNumber(base, exponent);
+    }
+
+
+    public toString() {
+        return `${this.base}E${this.exponent}`
+    }
+
+    public toNumber(): number {
+        return this.base * (10 ** this.exponent);
+    }
+
+    public multiply(right: ScientificNotationNumber): ScientificNotationNumber {
+        let resultBase = this.base * right.base;
+        let resultExponent = this.exponent + right.exponent;
+        while (resultBase >= 1) {
+            resultBase = resultBase / 10;
+            resultExponent++;
+        }
+        while (resultBase < 0.1) {
+            resultBase = resultBase * 10;
+            resultExponent--;
+        }
+        return new ScientificNotationNumber(resultBase, resultExponent);
+    }
+}

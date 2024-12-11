@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC11 {
     private _day: string = '11';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;

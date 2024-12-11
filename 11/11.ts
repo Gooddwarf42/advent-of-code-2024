@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC11 {
     private _day: string = '11';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -40,40 +40,32 @@ export class AOC11 {
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
-        console.log('Solving part ONE BUT WITH SCIENTIFIC NOTATION..');
-        const parsedInput = this.parseInputScientific(input);
+        const parsedInput = this.parseInput(input);
 
-        const twentyTwentyFour = ScientificNotationNumber.toScientificNotationNumber(2024);
-
-        const rule1: RuleScientific = {
-            condition: ruleInput => ruleInput.base === 0,
-            effect: () => [new ScientificNotationNumber(0.1, 1)]
+        const rule1: Rule = {
+            condition: ruleInput => ruleInput === 0,
+            effect: () => [1]
         };
-        const rule2: RuleScientific = {
-            condition: ruleInput => ruleInput.exponent % 2 === 0,
+        const rule2: Rule = {
+            condition: ruleInput => ruleInput.toString().length % 2 === 0,
             effect: (ruleInput) => [
-                ScientificNotationNumber.toScientificNotationNumber(Math.floor(ruleInput.toNumber() / (10 ** (ruleInput.exponent / 2)))),
-                ScientificNotationNumber.toScientificNotationNumber(ruleInput.toNumber() % (10 ** (ruleInput.exponent / 2)))
+                parseInt(ruleInput.toString().substring(0, ruleInput.toString().length / 2)),
+                parseInt(ruleInput.toString().substring(ruleInput.toString().length / 2)),
             ]
         };
-        const rule3: RuleScientific = {
+        const rule3: Rule = {
             condition: () => true,
-            effect: (ruleInput) => [ruleInput.multiply(twentyTwentyFour)]
+            effect: (ruleInput) => [ruleInput * 2024]
         };
 
         const rules = [rule1, rule2, rule3];
 
-        console.log(this.blinkScientific(parsedInput, rules, 25).length);
+        console.log(this.blink(parsedInput, rules, 75).length);
     }
 
     private parseInput(input: string): number[] {
 
         return input.split(/\s+/).map(s => parseInt(s));
-    }
-
-    private parseInputScientific(input: string): ScientificNotationNumber[] {
-
-        return input.split(/\s+/).map(s => ScientificNotationNumber.toScientificNotationNumber(parseInt(s)));
     }
 
     private blink(input: number[], rules: Rule[], times: number): number[] {
@@ -98,97 +90,9 @@ export class AOC11 {
         return result;
     }
 
-    private blinkScientific(input: ScientificNotationNumber[], rules: RuleScientific[], times: number): ScientificNotationNumber[] {
-        const start = performance.now();
-
-        let result = [...input];
-        for (let i = 0; i < times; i++) {
-            result = result.reduce((acc, curr) => {
-                    const applicableRule = rules.find(r => r.condition(curr))
-                    return acc.concat(applicableRule!.effect(curr));
-                }, []
-            );
-
-
-            if ((i + 1) % 5 === 0) {
-                const end = performance.now();
-                console.log(`"blinked ${i + 1} times. Length is ${result.length} ElapsedTime: ${end - start}ms`);
-            }
-
-        }
-
-        const end = performance.now();
-        console.log(`"blinked ${times} times. ElapsedTime: ${end - start}ms`);
-        return result;
-    }
-
 }
 
 type Rule = {
     condition: (ruleInput: number) => boolean,
     effect: (ruleInput: number) => number[]
 };
-type RuleScientific = {
-    condition: (ruleInput: ScientificNotationNumber) => boolean,
-    effect: (ruleInput: ScientificNotationNumber) => ScientificNotationNumber[]
-};
-
-class ScientificNotationNumber {
-    public base: number;
-    public exponent: number;
-
-    constructor(base: number, exponent: number) {
-        if (base === 0) {
-            this.base = 0;
-            this.exponent = 0;
-            return;
-        }
-        if (base < 0.1 || base >= 1) {
-            throw new RangeError("base should be between 0.1 and 1");
-        }
-        this.base = base;
-        this.exponent = exponent;
-    }
-
-    public static toScientificNotationNumber(normalNumber: number): ScientificNotationNumber {
-
-        if (normalNumber === 0) {
-            return new ScientificNotationNumber(0, 0);
-        }
-
-        let base = normalNumber
-        let exponent = 0;
-        while (base >= 1) {
-            base = base / 10;
-            exponent++;
-        }
-        while (base < 0.1) {
-            base = base * 10;
-            exponent--;
-        }
-        return new ScientificNotationNumber(base, exponent);
-    }
-
-
-    public toString() {
-        return `${this.base}E${this.exponent}`
-    }
-
-    public toNumber(): number {
-        return this.base * (10 ** this.exponent);
-    }
-
-    public multiply(right: ScientificNotationNumber): ScientificNotationNumber {
-        let resultBase = this.base * right.base;
-        let resultExponent = this.exponent + right.exponent;
-        while (resultBase >= 1) {
-            resultBase = resultBase / 10;
-            resultExponent++;
-        }
-        while (resultBase < 0.1) {
-            resultBase = resultBase * 10;
-            resultExponent--;
-        }
-        return new ScientificNotationNumber(resultBase, resultExponent);
-    }
-}

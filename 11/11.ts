@@ -18,7 +18,7 @@ export class AOC11 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log('TODO');
+        console.log(parsedInput);
     }
 
     public partTwo(input: string): void {
@@ -28,9 +28,9 @@ export class AOC11 {
         console.log('TODO');
     }
 
-    private parseInput(input: string): string {
+    private parseInput(input: string): number[] {
 
-        return input;
+        return input.split(/\s+/).map(s => parseInt(s));
     }
 
 }

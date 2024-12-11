@@ -40,27 +40,28 @@ export class AOC11 {
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
-        const parsedInput = this.parseInput(input);
+        console.log('Solving part ONE BUT WITH SCIENTIFIC NOTATION..');
+        const parsedInput = this.parseInputScientific(input);
 
-        const rule1: Rule = {
+        const rule1: RuleScientific = {
             condition: ruleInput => ruleInput === 0,
             effect: () => [1]
         };
-        const rule2: Rule = {
+        const rule2: RuleScientific = {
             condition: ruleInput => ruleInput.toString().length % 2 === 0,
             effect: (ruleInput) => [
                 parseInt(ruleInput.toString().substring(0, ruleInput.toString().length / 2)),
                 parseInt(ruleInput.toString().substring(ruleInput.toString().length / 2)),
             ]
         };
-        const rule3: Rule = {
+        const rule3: RuleScientific = {
             condition: () => true,
             effect: (ruleInput) => [ruleInput * 2024]
         };
 
         const rules = [rule1, rule2, rule3];
 
-        console.log(this.blink(parsedInput, rules, 75).length);
+        console.log(this.blinkScientific(parsedInput, rules, 25).length);
     }
 
     private parseInput(input: string): number[] {
@@ -68,7 +69,34 @@ export class AOC11 {
         return input.split(/\s+/).map(s => parseInt(s));
     }
 
+    private parseInputScientific(input: string): ScientificNotationNumber[] {
+
+        return input.split(/\s+/).map(s => ScientificNotationNumber.toScientificNotationNumber(parseInt(s)));
+    }
+
     private blink(input: number[], rules: Rule[], times: number): number[] {
+        const start = performance.now();
+
+        let result = [...input];
+        for (let i = 0; i < times; i++) {
+            result = result.reduce((acc, curr) => {
+                    const applicableRule = rules.find(r => r.condition(curr))
+                    return acc.concat(applicableRule!.effect(curr));
+                }, []
+            );
+
+            if ((i + 1) % 5 === 0) {
+                const end = performance.now();
+                console.log(`"blinked ${i + 1} times. Length is ${result.length} ElapsedTime: ${end - start}ms`);
+            }
+        }
+
+        const end = performance.now();
+        console.log(`"blinked ${times} times. ElapsedTime: ${end - start}ms`);
+        return result;
+    }
+
+    private blinkScientific(input: ScientificNotationNumber[], rules: RuleScientific[], times: number): ScientificNotationNumber[] {
         const start = performance.now();
 
         let result = [...input];
@@ -95,6 +123,10 @@ export class AOC11 {
 type Rule = {
     condition: (ruleInput: number) => boolean,
     effect: (ruleInput: number) => number[]
+};
+type RuleScientific = {
+    condition: (ruleInput: ScientificNotationNumber) => boolean,
+    effect: (ruleInput: ScientificNotationNumber) => ScientificNotationNumber[]
 };
 
 class ScientificNotationNumber {

@@ -18,10 +18,6 @@ export class AOC11 {
 
         const parsedInput = this.parseInput(input);
 
-        type Rule = {
-            condition: (ruleInput: number) => boolean,
-            effect: (ruleInput: number) => number[]
-        };
 
         const rule1: Rule = {
             condition: ruleInput => ruleInput === 0,
@@ -41,16 +37,7 @@ export class AOC11 {
 
         const rules = [rule1, rule2, rule3];
 
-        let result = [...parsedInput];
-        for (let i = 0; i < 25; i++) {
-            result = result.reduce((acc, curr) => {
-                    const applicableRule = rules.find(r => r.condition(curr))
-                    return acc.concat(applicableRule!.effect(curr));
-                }, []
-            );
-        }
-
-        console.log(result.length);
+        console.log(this.blink(parsedInput, rules, 25).length);
     }
 
     public partTwo(input: string): void {
@@ -65,4 +52,21 @@ export class AOC11 {
         return input.split(/\s+/).map(s => parseInt(s));
     }
 
+    private blink(input: number[], rules: Rule[], times: number): number[] {
+        let result = [...input];
+        for (let i = 0; i < times; i++) {
+            result = result.reduce((acc, curr) => {
+                    const applicableRule = rules.find(r => r.condition(curr))
+                    return acc.concat(applicableRule!.effect(curr));
+                }, []
+            );
+        }
+        return result;
+    }
+
 }
+
+type Rule = {
+    condition: (ruleInput: number) => boolean,
+    effect: (ruleInput: number) => number[]
+};

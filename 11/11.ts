@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC11 {
     private _day: string = '11';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -40,6 +40,7 @@ export class AOC11 {
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
+        console.log('ACTUALLY doing part1 again');
         const parsedInput = this.parseInput(input);
 
         const rule1: Rule = {
@@ -60,7 +61,14 @@ export class AOC11 {
 
         const rules = [rule1, rule2, rule3];
 
-        console.log(this.blink(parsedInput, rules, 75).length);
+        const start = performance.now();
+        let count = 0;
+        for (const entry of parsedInput) {
+            count += this.countStonesGeneratedFromThisAfterBlinks(entry, 25, rules);
+        }
+        const end = performance.now();
+        console.log(`"Done. ElapsedTime: ${end - start}ms`);
+        console.log(count);
     }
 
     private parseInput(input: string): number[] {
@@ -90,6 +98,45 @@ export class AOC11 {
         return result;
     }
 
+    private countStonesGeneratedFromThisAfterBlinks(entry: number, remainingBlinks: number, rules: Rule[]) {
+
+        let cachedResults = this.stonesCache.get(entry);
+        // initialize cachedResult[entry]
+        if (cachedResults === undefined) {
+            this.stonesCache.set(entry, new Map<number, number>());
+            cachedResults = this.stonesCache.get(entry);
+        }
+        const properCachedResult = cachedResults!.get(remainingBlinks);
+
+        if (properCachedResult !== undefined) {
+            return properCachedResult;
+        }
+
+
+        // base case here!
+        if (remainingBlinks === 0) {
+            return 1;
+        }
+
+        // meat of the logic here
+        for (const rule of rules) {
+            if (!rule.condition(entry)) {
+                continue;
+            }
+
+            const nextStepStones = rule.effect(entry);
+
+            let count = 0;
+            for (const stone of nextStepStones) {
+                count += this.countStonesGeneratedFromThisAfterBlinks(stone, remainingBlinks - 1, rules);
+            }
+            return count;
+        }
+
+        throw Error("something bad happened");
+    }
+
+    private stonesCache: Map<number, Map<number, number>> = new Map<number, Map<number, number>>();
 }
 
 type Rule = {

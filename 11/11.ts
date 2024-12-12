@@ -69,6 +69,7 @@ export class AOC11 {
         const end = performance.now();
         console.log(`"Done. ElapsedTime: ${end - start}ms`);
         console.log(count);
+        console.log(this._cacheHits);
     }
 
     private parseInput(input: string): number[] {
@@ -81,9 +82,11 @@ export class AOC11 {
 
         let result = [...input];
         for (let i = 0; i < times; i++) {
-            result = result.reduce((acc, curr) => {
+            result = result.reduce((acc: number[], curr) => {
                     const applicableRule = rules.find(r => r.condition(curr))
-                    return acc.concat(applicableRule!.effect(curr));
+                    const result = applicableRule!.effect(curr);
+                    acc.push(...result);
+                    return acc;
                 }, []
             );
 
@@ -98,6 +101,8 @@ export class AOC11 {
         return result;
     }
 
+    private _cacheHits = 0;
+
     private countStonesGeneratedFromThisAfterBlinks(entry: number, remainingBlinks: number, rules: Rule[]) {
 
         let cachedResults = this.stonesCache.get(entry);
@@ -109,13 +114,15 @@ export class AOC11 {
         const properCachedResult = cachedResults!.get(remainingBlinks);
 
         if (properCachedResult !== undefined) {
+            this._cacheHits++;
             return properCachedResult;
         }
 
-
         // base case here!
         if (remainingBlinks === 0) {
-            return 1;
+            const result = 1;
+            cachedResults!.set(remainingBlinks, result);
+            return result;
         }
 
         // meat of the logic here
@@ -130,6 +137,7 @@ export class AOC11 {
             for (const stone of nextStepStones) {
                 count += this.countStonesGeneratedFromThisAfterBlinks(stone, remainingBlinks - 1, rules);
             }
+            cachedResults!.set(remainingBlinks, count);
             return count;
         }
 

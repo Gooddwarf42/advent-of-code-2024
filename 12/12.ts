@@ -71,10 +71,6 @@ export class AOC12 {
         return fences;
     }
 
-    private printMap(visitedMap: string[][]): string {
-        return visitedMap.map(row => row.join('')).join('\n')
-    }
-
     private visitArea(regionIdentifier: string, i: number, j: number, map: string[][], visitedMap: (string | ".")[][]): VisitResult {
 
         const identifier = map?.[i]?.[j];
@@ -136,7 +132,3 @@ type VisitResult = RegionInfo | 'visited' | 'nonrelevant';
 type RegionInfo = { area: number, perimeter: number, edges: EdgeInfo[] };
 type Direction = 'U' | 'R' | 'D' | 'L';
 type EdgeInfo = { coordinates: { i: number, j: number }[], direction: Direction };
-
-function printMap(visitedMap: string[][]): string {
-    return visitedMap.map(row => row.join('')).join('\n')
-}

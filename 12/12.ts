@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC12 {
     private _day: string = '12';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -32,7 +32,15 @@ export class AOC12 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const fences = this.computeFences(parsedInput);
+
+        const cost = fences.reduce((acc: number, current) => {
+            acc += (current.area * current.edges.length);
+            return acc;
+        }, 0)
+
+        console.log(cost);
     }
 
     private parseInput(input: string): string[] {
@@ -63,9 +71,7 @@ export class AOC12 {
         return fences;
     }
 
-    function
-
-    printMap(visitedMap: string[][]): string {
+    private printMap(visitedMap: string[][]): string {
         return visitedMap.map(row => row.join('')).join('\n')
     }
 
@@ -86,37 +92,50 @@ export class AOC12 {
         // We are in a proper place of this region. Mark this as visited and continue exploring
         visitedMap[i][j] = '.';
 
-        const neighboursResults = [
-            this.visitArea(regionIdentifier, i - 1, j, map, visitedMap),
-            this.visitArea(regionIdentifier, i, j + 1, map, visitedMap),
-            this.visitArea(regionIdentifier, i + 1, j, map, visitedMap),
-            this.visitArea(regionIdentifier, i, j - 1, map, visitedMap),
+        const neighboursResults: { direction: Direction, result: VisitResult }[] = [
+            {direction: 'U', result: this.visitArea(regionIdentifier, i - 1, j, map, visitedMap)},
+            {direction: 'R', result: this.visitArea(regionIdentifier, i, j + 1, map, visitedMap)},
+            {direction: 'D', result: this.visitArea(regionIdentifier, i + 1, j, map, visitedMap)},
+            {direction: 'L', result: this.visitArea(regionIdentifier, i, j - 1, map, visitedMap)},
         ];
-        
-        const nonrelevantNeighbours = neighboursResults.filter(r => r === 'nonrelevant');
-        const relevantNeighbours = neighboursResults.filter(r => r !== 'nonrelevant' && r !== 'visited') as RegionInfo[];
 
+        const nonrelevantNeighbours = neighboursResults.filter(r => r.result === 'nonrelevant');
+        const relevantNeighbours = neighboursResults.filter(r => r.result !== 'nonrelevant' && r.result !== 'visited') as {
+            direction: Direction,
+            result: RegionInfo
+        }[];
+
+        const potentialNewEdges = nonrelevantNeighbours.map(e => ({coordinates: [{i, j}], direction: e.direction}));
         if (relevantNeighbours.length === 0) {
             return {
                 area: 1,
-                perimeter: nonrelevantNeighbours.length
-            }
+                perimeter: nonrelevantNeighbours.length,
+                edges: potentialNewEdges
+            };
         }
 
         const area = relevantNeighbours.reduce((acc: number, current) => {
-            acc += current.area;
+            acc += current.result.area;
             return acc;
         }, 1);
         const perimeter = relevantNeighbours.reduce((acc: number, current) => {
-            acc += current.perimeter;
+            acc += current.result.perimeter;
             return acc;
         }, nonrelevantNeighbours.length);
-        return {area, perimeter};
+
+        // TODO merge edgesInfos properly
+        const edges: EdgeInfo[] = relevantNeighbours.reduce((acc: EdgeInfo[], current) => {
+            acc.push(...current.result.edges);
+            return acc;
+        }, potentialNewEdges);
+        return {area, perimeter, edges};
     }
 }
 
 type VisitResult = RegionInfo | 'visited' | 'nonrelevant';
-type RegionInfo = { area: number, perimeter: number };
+type RegionInfo = { area: number, perimeter: number, edges: EdgeInfo[] };
+type Direction = 'U' | 'R' | 'D' | 'L';
+type EdgeInfo = { coordinates: { i: number, j: number }[], direction: Direction };
 
 function printMap(visitedMap: string[][]): string {
     return visitedMap.map(row => row.join('')).join('\n')

@@ -36,7 +36,12 @@ export class AOC12 {
         const fences = this.computeFences(parsedInput);
 
         const cost = fences.reduce((acc: number, current) => {
-            acc += (current.area * current.edges.length);
+            const currentEdges =
+                current.edges.up.length
+                + current.edges.right.length
+                + current.edges.down.length
+                + current.edges.left.length;
+            acc += (current.area * currentEdges);
             return acc;
         }, 0)
 
@@ -101,7 +106,38 @@ export class AOC12 {
             result: RegionInfo
         }[];
 
-        const potentialNewEdges = nonrelevantNeighbours.map(e => ({coordinates: [{i, j}], direction: e.direction}));
+        // const potentialNewEdges = nonrelevantNeighbours.map(e => ({
+        //     coordinates: [{i, j}],
+        //     direction: e.direction
+        // })) as EdgeInfo[];
+
+        const potentialNewEdges: RegionEdges = {
+            up: [],
+            right: [],
+            down: [],
+            left: []
+        };
+
+        nonrelevantNeighbours.forEach((neighbour) => {
+            switch (neighbour.direction) {
+                case 'U':
+                    potentialNewEdges.up.push([{i, j}]);
+                    break;
+                case 'R':
+                    potentialNewEdges.right.push([{i, j}]);
+                    break;
+                case 'D':
+                    potentialNewEdges.down.push([{i, j}]);
+                    break;
+                case 'L':
+                    potentialNewEdges.left.push([{i, j}]);
+                    break;
+                default:
+                    const never: never = neighbour.direction;
+                    throw new Error('Unknown direction. Bad things happened');
+            }
+        });
+
         if (relevantNeighbours.length === 0) {
             return {
                 area: 1,
@@ -119,16 +155,53 @@ export class AOC12 {
             return acc;
         }, nonrelevantNeighbours.length);
 
-        // TODO merge edgesInfos properly
-        const edges: EdgeInfo[] = relevantNeighbours.reduce((acc: EdgeInfo[], current) => {
-            acc.push(...current.result.edges);
-            return acc;
-        }, potentialNewEdges);
+
+        const relevantNeigboursEdges = relevantNeighbours.map(r => r.result.edges);
+
+        const edges = this.mergeEdges(relevantNeigboursEdges, potentialNewEdges);
+
         return {area, perimeter, edges};
+    }
+
+    private mergeEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges): RegionEdges {
+
+        // handle down walls
+        const allDownWalls = edgesFromRecursiveCalls.map(e => e.down).flat();
+        allDownWalls.push(...potentialNewEdges.down);
+
+        // handle up walls
+        const allUpWalls = edgesFromRecursiveCalls.map(e => e.up).flat();
+        allUpWalls.push(...potentialNewEdges.up);
+
+        // handle right walls
+        const allRightWalls = edgesFromRecursiveCalls.map(e => e.right).flat();
+        allRightWalls.push(...potentialNewEdges.right);
+
+        // handle left walls
+        const allLeftWalls = edgesFromRecursiveCalls.map(e => e.left).flat();
+        allLeftWalls.push(...potentialNewEdges.left);
+
+        return {
+            up: allUpWalls,
+            right: allRightWalls,
+            down: allDownWalls,
+            left: allLeftWalls,
+        };
     }
 }
 
 type VisitResult = RegionInfo | 'visited' | 'nonrelevant';
-type RegionInfo = { area: number, perimeter: number, edges: EdgeInfo[] };
+type RegionInfo = {
+    area: number,
+    perimeter: number,
+    edges: RegionEdges
+};
+type RegionEdges = {
+    up: EdgeInfo[],
+    right: EdgeInfo[],
+    down: EdgeInfo[],
+    left: EdgeInfo[]
+};
 type Direction = 'U' | 'R' | 'D' | 'L';
-type EdgeInfo = { coordinates: { i: number, j: number }[], direction: Direction };
+type Coordinate = { i: number, j: number };
+type EdgeInfo = Coordinate[];

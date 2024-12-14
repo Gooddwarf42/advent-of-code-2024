@@ -8,11 +8,12 @@ import {AOC08} from "./08/08";
 import {AOC09} from "./09/09";
 import {AOC10} from "./10/10";
 import {AOC11} from "./11/11";
+import {AOC12} from "./12/12";
 
 const welcomeMessage: string = 'I\'m running, rawr!!';
 //let message2: string = 4;
 console.log(welcomeMessage);
-const puzzle = new AOC11();
+const puzzle = new AOC12();
 const input = puzzle.readInput();
 puzzle.partOne(input);
 puzzle.partTwo(input);

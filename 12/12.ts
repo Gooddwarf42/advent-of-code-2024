@@ -66,15 +66,7 @@ export class AOC12 {
                     continue;
                 }
 
-                console.log(`Found region to compute! ${regionIdentifier} at (${i},${j})`);
                 const areaData = this.visitArea(regionIdentifier, i, j, map, visitedMap) as RegionInfo;
-
-                const totalEdges =
-                    areaData.edges.up.length
-                    + areaData.edges.right.length
-                    + areaData.edges.down.length
-                    + areaData.edges.left.length
-                console.log(`Area: ${areaData.area}, edges: ${totalEdges}`);
                 fences.push(areaData);
             }
         }
@@ -155,133 +147,70 @@ export class AOC12 {
             return acc;
         }, nonrelevantNeighbours.length);
 
-
         const relevantNeigboursEdges = relevantNeighbours.map(r => r.result.edges);
-
         const edges = this.mergeEdges(relevantNeigboursEdges, potentialNewEdges);
 
         return {area, perimeter, edges};
     }
 
     private mergeEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges): RegionEdges {
-
-        // TODO TEST REMOVE
-        // const testHorEdges = [[{i: 0, j: 1}, {i: 0, j: 2}], [{i: 1, j: 5}], [{i: 1, j: 3}]] as EdgeInfo[]
-        // const testHorEdges2 = [{i: 1, j: 4}] as EdgeInfo
-        // const testVerEdges = [[{i: 1, j: 0}, {i: 2, j: 0}], [{i: 5, j: 2}, {i: 4, j: 2}]] as EdgeInfo[]
-        // const testVerEdges2 = [{i: 3, j: 2}] as EdgeInfo
-        // edgesFromRecursiveCalls = testHorEdges.map(e => ({
-        //     down: [JSON.parse(JSON.stringify(e))],
-        //     up: [JSON.parse(JSON.stringify(e))],
-        //     left: [JSON.parse(JSON.stringify(e))],
-        //     right: [JSON.parse(JSON.stringify(e))],
-        // }));
-        //
-        // potentialNewEdges = {
-        //     down: [JSON.parse(JSON.stringify(testHorEdges2))],
-        //     up: [JSON.parse(JSON.stringify(testHorEdges2))],
-        //     left: [JSON.parse(JSON.stringify(testVerEdges2))],
-        //     right: [JSON.parse(JSON.stringify(testVerEdges2))],
-        // };
-        // handle down Edges
-        const allDownEdges = edgesFromRecursiveCalls.map(e => e.down).flat();
-        allDownEdges.push(...potentialNewEdges.down);
-        allDownEdges.forEach(e => e.sort((a, b) => a.j - b.j)); // ensure all horizontal edges are sorted. Probably unnecessary, but heh
-        const groupedDownEdges = groupBy(allDownEdges, edge => edge[0].i);
-
-        for (const [_, edges] of Object.entries(groupedDownEdges)) {
-            edges.sort((a, b) => a[0].j - b[0].j); // ensure the edges of each row are ordered
-            let k = 0;
-            while (k < edges.length - 1) {
-                if (edges[k][edges[k].length - 1].j + 1 !== edges[k + 1][0].j) {
-                    // these are actualy distinct edges
-                    k++;
-                    continue;
-                }
-
-                // we need to merge these k and k+1 into asingle edge!
-                edges[k].push(...edges[k + 1]);
-                edges.splice(k + 1, 1);
-            }
-        }
-        const finalDownEdges = Object.values(groupedDownEdges).flat();
-
-
-        // handle up Edges
-        const allUpEdges = edgesFromRecursiveCalls.map(e => e.up).flat();
-        allUpEdges.push(...potentialNewEdges.up);
-        allUpEdges.forEach(e => e.sort((a, b) => a.j - b.j)); // ensure all horizontal edges are sorted. Probably unnecessary, but heh
-        const groupedUpEdges = groupBy(allUpEdges, edge => edge[0].i);
-
-        for (const [_, edges] of Object.entries(groupedUpEdges)) {
-            edges.sort((a, b) => a[0].j - b[0].j); // ensure the edges of each row are ordered
-            let k = 0;
-            while (k < edges.length - 1) {
-                if (edges[k][edges[k].length - 1].j + 1 !== edges[k + 1][0].j) {
-                    // these are actualy distinct edges
-                    k++;
-                    continue;
-                }
-
-                // we need to merge these k and k+1 into asingle edge!
-                edges[k].push(...edges[k + 1]);
-                edges.splice(k + 1, 1);
-            }
-        }
-        const finalUpEdges = Object.values(groupedUpEdges).flat();
-
-        // handle right Edges
-        const allRightEdges = edgesFromRecursiveCalls.map(e => e.right).flat();
-        allRightEdges.push(...potentialNewEdges.right);
-        allRightEdges.forEach(e => e.sort((a, b) => a.i - b.i)); // ensure all vertical edges are sorted. Probably unnecessary, but heh
-        const groupedRightEdges = groupBy(allRightEdges, edge => edge[0].j);
-
-        for (const [_, edges] of Object.entries(groupedRightEdges)) {
-            edges.sort((a, b) => a[0].i - b[0].i); // ensure the edges of each column are ordered
-            let k = 0;
-            while (k < edges.length - 1) {
-                if (edges[k][edges[k].length - 1].i + 1 !== edges[k + 1][0].i) {
-                    // these are actualy distinct edges
-                    k++;
-                    continue;
-                }
-
-                // we need to merge these k and k+1 into asingle edge!
-                edges[k].push(...edges[k + 1]);
-                edges.splice(k + 1, 1);
-            }
-        }
-        const finalRightEdges = Object.values(groupedRightEdges).flat();
-
-        // handle left Edges
-        const allLeftEdges = edgesFromRecursiveCalls.map(e => e.left).flat();
-        allLeftEdges.push(...potentialNewEdges.left);
-        allLeftEdges.forEach(e => e.sort((a, b) => a.i - b.i)); // ensure all vertical edges are sorted. Probably unnecessary, but heh
-        const groupedLeftEdges = groupBy(allLeftEdges, edge => edge[0].j);
-
-        for (const [_, edges] of Object.entries(groupedLeftEdges)) {
-            edges.sort((a, b) => a[0].i - b[0].i); // ensure the edges of each column are ordered
-            let k = 0;
-            while (k < edges.length - 1) {
-                if (edges[k][edges[k].length - 1].i + 1 !== edges[k + 1][0].i) {
-                    // these are actualy distinct edges
-                    k++;
-                    continue;
-                }
-
-                // we need to merge these k and k+1 into asingle edge!
-                edges[k].push(...edges[k + 1]);
-                edges.splice(k + 1, 1);
-            }
-        }
-        const finalLeftEdges = Object.values(groupedLeftEdges).flat();
-
         return {
-            up: finalUpEdges,
-            right: finalRightEdges,
-            down: finalDownEdges,
-            left: finalLeftEdges,
+            up: this.mergeHorizontalEdges(edgesFromRecursiveCalls, potentialNewEdges, e => e.up),
+            right: this.mergeVerticalEdges(edgesFromRecursiveCalls, potentialNewEdges, e => e.right),
+            down: this.mergeHorizontalEdges(edgesFromRecursiveCalls, potentialNewEdges, e => e.down),
+            left: this.mergeVerticalEdges(edgesFromRecursiveCalls, potentialNewEdges, e => e.left),
         };
+    }
+
+    private mergeHorizontalEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges, edgeInfoSelector: (edgesSelector: RegionEdges) => EdgeInfo[]): EdgeInfo[] {
+
+        const allHorizontalEdges = edgesFromRecursiveCalls.map(e => edgeInfoSelector(e)).flat();
+        allHorizontalEdges.push(...edgeInfoSelector(potentialNewEdges));
+
+        allHorizontalEdges.forEach(e => e.sort((a, b) => a.j - b.j)); // ensure all horizontal edges are sorted. Probably unnecessary, but heh
+        const groupedHorizontalEdges = groupBy(allHorizontalEdges, edge => edge[0].i);
+
+        for (const [_, edges] of Object.entries(groupedHorizontalEdges)) {
+            edges.sort((a, b) => a[0].j - b[0].j); // ensure the edges of each row are ordered
+            let k = 0;
+            while (k < edges.length - 1) {
+                if (edges[k][edges[k].length - 1].j + 1 !== edges[k + 1][0].j) {
+                    // these are actualy distinct edges
+                    k++;
+                    continue;
+                }
+
+                // we need to merge these k and k+1 into asingle edge!
+                edges[k].push(...edges[k + 1]);
+                edges.splice(k + 1, 1);
+            }
+        }
+        return Object.values(groupedHorizontalEdges).flat();
+    }
+
+    private mergeVerticalEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges, edgeInfoSelector: (edgesSelector: RegionEdges) => EdgeInfo[]): EdgeInfo[] {
+
+        const allVerticalEdges = edgesFromRecursiveCalls.map(e => edgeInfoSelector(e)).flat();
+        allVerticalEdges.push(...edgeInfoSelector(potentialNewEdges));
+        allVerticalEdges.forEach(e => e.sort((a, b) => a.i - b.i)); // ensure all vertical edges are sorted. Probably unnecessary, but heh
+        const groupedVerticalEdges = groupBy(allVerticalEdges, edge => edge[0].j);
+
+        for (const [_, edges] of Object.entries(groupedVerticalEdges)) {
+            edges.sort((a, b) => a[0].i - b[0].i); // ensure the edges of each column are ordered
+            let k = 0;
+            while (k < edges.length - 1) {
+                if (edges[k][edges[k].length - 1].i + 1 !== edges[k + 1][0].i) {
+                    // these are actualy distinct edges
+                    k++;
+                    continue;
+                }
+
+                // we need to merge these k and k+1 into asingle edge!
+                edges[k].push(...edges[k + 1]);
+                edges.splice(k + 1, 1);
+            }
+        }
+        return Object.values(groupedVerticalEdges).flat();
     }
 }
 

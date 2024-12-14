@@ -1,3 +1,5 @@
+// noinspection JSSuspiciousNameCombination
+
 import * as fs from 'fs';
 
 export class AOC13 {
@@ -36,7 +38,24 @@ export class AOC13 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        let total = 0;
+
+        for (const machine of parsedInput) {
+            const offsetConstant = 10000000000000;
+
+            machine.prize.x += offsetConstant;
+            machine.prize.y += offsetConstant;
+
+            const result = this.horrificGaussElimination(machine);
+            if (result === null) {
+                continue;
+            }
+
+            total += 3 * result.aPresses + result.bPresses;
+        }
+
+        console.log(total);
     }
 
     private horrificGaussElimination(machine: Machine): { aPresses: number, bPresses: number } | null {

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC12 {
     private _day: string = '12';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -66,10 +66,15 @@ export class AOC12 {
                     continue;
                 }
 
-                //console.log(`Found region to compute! ${regionIdentifier} at (${i},${j})`);
+                console.log(`Found region to compute! ${regionIdentifier} at (${i},${j})`);
                 const areaData = this.visitArea(regionIdentifier, i, j, map, visitedMap) as RegionInfo;
 
-                //console.log(areaData);
+                const totalEdges =
+                    areaData.edges.up.length
+                    + areaData.edges.right.length
+                    + areaData.edges.down.length
+                    + areaData.edges.left.length
+                console.log(`Area: ${areaData.area}, edges: ${totalEdges}`);
                 fences.push(areaData);
             }
         }
@@ -105,11 +110,6 @@ export class AOC12 {
             direction: Direction,
             result: RegionInfo
         }[];
-
-        // const potentialNewEdges = nonrelevantNeighbours.map(e => ({
-        //     coordinates: [{i, j}],
-        //     direction: e.direction
-        // })) as EdgeInfo[];
 
         const potentialNewEdges: RegionEdges = {
             up: [],
@@ -165,27 +165,122 @@ export class AOC12 {
 
     private mergeEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges): RegionEdges {
 
-        // handle down walls
-        const allDownWalls = edgesFromRecursiveCalls.map(e => e.down).flat();
-        allDownWalls.push(...potentialNewEdges.down);
+        // TODO TEST REMOVE
+        // const testHorEdges = [[{i: 0, j: 1}, {i: 0, j: 2}], [{i: 1, j: 5}], [{i: 1, j: 3}]] as EdgeInfo[]
+        // const testHorEdges2 = [{i: 1, j: 4}] as EdgeInfo
+        // const testVerEdges = [[{i: 1, j: 0}, {i: 2, j: 0}], [{i: 5, j: 2}, {i: 4, j: 2}]] as EdgeInfo[]
+        // const testVerEdges2 = [{i: 3, j: 2}] as EdgeInfo
+        // edgesFromRecursiveCalls = testHorEdges.map(e => ({
+        //     down: [JSON.parse(JSON.stringify(e))],
+        //     up: [JSON.parse(JSON.stringify(e))],
+        //     left: [JSON.parse(JSON.stringify(e))],
+        //     right: [JSON.parse(JSON.stringify(e))],
+        // }));
+        //
+        // potentialNewEdges = {
+        //     down: [JSON.parse(JSON.stringify(testHorEdges2))],
+        //     up: [JSON.parse(JSON.stringify(testHorEdges2))],
+        //     left: [JSON.parse(JSON.stringify(testVerEdges2))],
+        //     right: [JSON.parse(JSON.stringify(testVerEdges2))],
+        // };
+        // handle down Edges
+        const allDownEdges = edgesFromRecursiveCalls.map(e => e.down).flat();
+        allDownEdges.push(...potentialNewEdges.down);
+        allDownEdges.forEach(e => e.sort((a, b) => a.j - b.j)); // ensure all horizontal edges are sorted. Probably unnecessary, but heh
+        const groupedDownEdges = groupBy(allDownEdges, edge => edge[0].i);
 
-        // handle up walls
-        const allUpWalls = edgesFromRecursiveCalls.map(e => e.up).flat();
-        allUpWalls.push(...potentialNewEdges.up);
+        for (const [_, edges] of Object.entries(groupedDownEdges)) {
+            edges.sort((a, b) => a[0].j - b[0].j); // ensure the edges of each row are ordered
+            let k = 0;
+            while (k < edges.length - 1) {
+                if (edges[k][edges[k].length - 1].j + 1 !== edges[k + 1][0].j) {
+                    // these are actualy distinct edges
+                    k++;
+                    continue;
+                }
 
-        // handle right walls
-        const allRightWalls = edgesFromRecursiveCalls.map(e => e.right).flat();
-        allRightWalls.push(...potentialNewEdges.right);
+                // we need to merge these k and k+1 into asingle edge!
+                edges[k].push(...edges[k + 1]);
+                edges.splice(k + 1, 1);
+            }
+        }
+        const finalDownEdges = Object.values(groupedDownEdges).flat();
 
-        // handle left walls
-        const allLeftWalls = edgesFromRecursiveCalls.map(e => e.left).flat();
-        allLeftWalls.push(...potentialNewEdges.left);
+
+        // handle up Edges
+        const allUpEdges = edgesFromRecursiveCalls.map(e => e.up).flat();
+        allUpEdges.push(...potentialNewEdges.up);
+        allUpEdges.forEach(e => e.sort((a, b) => a.j - b.j)); // ensure all horizontal edges are sorted. Probably unnecessary, but heh
+        const groupedUpEdges = groupBy(allUpEdges, edge => edge[0].i);
+
+        for (const [_, edges] of Object.entries(groupedUpEdges)) {
+            edges.sort((a, b) => a[0].j - b[0].j); // ensure the edges of each row are ordered
+            let k = 0;
+            while (k < edges.length - 1) {
+                if (edges[k][edges[k].length - 1].j + 1 !== edges[k + 1][0].j) {
+                    // these are actualy distinct edges
+                    k++;
+                    continue;
+                }
+
+                // we need to merge these k and k+1 into asingle edge!
+                edges[k].push(...edges[k + 1]);
+                edges.splice(k + 1, 1);
+            }
+        }
+        const finalUpEdges = Object.values(groupedUpEdges).flat();
+
+        // handle right Edges
+        const allRightEdges = edgesFromRecursiveCalls.map(e => e.right).flat();
+        allRightEdges.push(...potentialNewEdges.right);
+        allRightEdges.forEach(e => e.sort((a, b) => a.i - b.i)); // ensure all vertical edges are sorted. Probably unnecessary, but heh
+        const groupedRightEdges = groupBy(allRightEdges, edge => edge[0].j);
+
+        for (const [_, edges] of Object.entries(groupedRightEdges)) {
+            edges.sort((a, b) => a[0].i - b[0].i); // ensure the edges of each column are ordered
+            let k = 0;
+            while (k < edges.length - 1) {
+                if (edges[k][edges[k].length - 1].i + 1 !== edges[k + 1][0].i) {
+                    // these are actualy distinct edges
+                    k++;
+                    continue;
+                }
+
+                // we need to merge these k and k+1 into asingle edge!
+                edges[k].push(...edges[k + 1]);
+                edges.splice(k + 1, 1);
+            }
+        }
+        const finalRightEdges = Object.values(groupedRightEdges).flat();
+
+        // handle left Edges
+        const allLeftEdges = edgesFromRecursiveCalls.map(e => e.left).flat();
+        allLeftEdges.push(...potentialNewEdges.left);
+        allLeftEdges.forEach(e => e.sort((a, b) => a.i - b.i)); // ensure all vertical edges are sorted. Probably unnecessary, but heh
+        const groupedLeftEdges = groupBy(allLeftEdges, edge => edge[0].j);
+
+        for (const [_, edges] of Object.entries(groupedLeftEdges)) {
+            edges.sort((a, b) => a[0].i - b[0].i); // ensure the edges of each column are ordered
+            let k = 0;
+            while (k < edges.length - 1) {
+                if (edges[k][edges[k].length - 1].i + 1 !== edges[k + 1][0].i) {
+                    // these are actualy distinct edges
+                    k++;
+                    continue;
+                }
+
+                // we need to merge these k and k+1 into asingle edge!
+                edges[k].push(...edges[k + 1]);
+                edges.splice(k + 1, 1);
+            }
+        }
+        const finalLeftEdges = Object.values(groupedLeftEdges).flat();
 
         return {
-            up: allUpWalls,
-            right: allRightWalls,
-            down: allDownWalls,
-            left: allLeftWalls,
+            up: finalUpEdges,
+            right: finalRightEdges,
+            down: finalDownEdges,
+            left: finalLeftEdges,
         };
     }
 }
@@ -205,3 +300,16 @@ type RegionEdges = {
 type Direction = 'U' | 'R' | 'D' | 'L';
 type Coordinate = { i: number, j: number };
 type EdgeInfo = Coordinate[];
+
+
+function groupBy<T, K extends keyof any>(array: T[], keySelector: (item: T) => K): Record<K, T[]> {
+    return array.reduce((acc: Record<K, T[]>, current: T) => {
+        const key = keySelector(current);
+        if (acc[key] === undefined) {
+            acc[key] = [];
+        }
+        acc[key].push(current);
+        return acc;
+    }, {} as Record<K, T[]>);
+
+}

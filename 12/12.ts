@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import {groupBy} from "../Shared/shared";
 
 export class AOC12 {
     private _day: string = '12';
@@ -125,6 +126,7 @@ export class AOC12 {
                     potentialNewEdges.left.push([{i, j}]);
                     break;
                 default:
+                    // noinspection JSUnusedLocalSymbols
                     const never: never = neighbour.direction;
                     throw new Error('Unknown direction. Bad things happened');
             }
@@ -164,53 +166,45 @@ export class AOC12 {
 
     private mergeHorizontalEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges, edgeInfoSelector: (edgesSelector: RegionEdges) => EdgeInfo[]): EdgeInfo[] {
 
-        const allHorizontalEdges = edgesFromRecursiveCalls.map(e => edgeInfoSelector(e)).flat();
-        allHorizontalEdges.push(...edgeInfoSelector(potentialNewEdges));
-
-        allHorizontalEdges.forEach(e => e.sort((a, b) => a.j - b.j)); // ensure all horizontal edges are sorted. Probably unnecessary, but heh
-        const groupedHorizontalEdges = groupBy(allHorizontalEdges, edge => edge[0].i);
-
-        for (const [_, edges] of Object.entries(groupedHorizontalEdges)) {
-            edges.sort((a, b) => a[0].j - b[0].j); // ensure the edges of each row are ordered
-            let k = 0;
-            while (k < edges.length - 1) {
-                if (edges[k][edges[k].length - 1].j + 1 !== edges[k + 1][0].j) {
-                    // these are actualy distinct edges
-                    k++;
-                    continue;
-                }
-
-                // we need to merge these k and k+1 into asingle edge!
-                edges[k].push(...edges[k + 1]);
-                edges.splice(k + 1, 1);
-            }
-        }
-        return Object.values(groupedHorizontalEdges).flat();
+        return this.mergeEdgesInternal(edgesFromRecursiveCalls, potentialNewEdges, edgeInfoSelector, 'horizontal');
     }
 
     private mergeVerticalEdges(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges, edgeInfoSelector: (edgesSelector: RegionEdges) => EdgeInfo[]): EdgeInfo[] {
 
-        const allVerticalEdges = edgesFromRecursiveCalls.map(e => edgeInfoSelector(e)).flat();
-        allVerticalEdges.push(...edgeInfoSelector(potentialNewEdges));
-        allVerticalEdges.forEach(e => e.sort((a, b) => a.i - b.i)); // ensure all vertical edges are sorted. Probably unnecessary, but heh
-        const groupedVerticalEdges = groupBy(allVerticalEdges, edge => edge[0].j);
+        return this.mergeEdgesInternal(edgesFromRecursiveCalls, potentialNewEdges, edgeInfoSelector, 'vertical');
+    }
 
-        for (const [_, edges] of Object.entries(groupedVerticalEdges)) {
-            edges.sort((a, b) => a[0].i - b[0].i); // ensure the edges of each column are ordered
+    private mergeEdgesInternal(edgesFromRecursiveCalls: RegionEdges[], potentialNewEdges: RegionEdges, edgeInfoSelector: (edgesSelector: RegionEdges) => EdgeInfo[], type: 'vertical' | 'horizontal'): EdgeInfo[] {
+
+        const groupingSelector = type === 'vertical'
+            ? (coordinate: Coordinate) => coordinate.j
+            : (coordinate: Coordinate) => coordinate.i;
+
+        const coordinateComponentAccessor = type === 'vertical'
+            ? (coordinate: Coordinate) => coordinate.i
+            : (coordinate: Coordinate) => coordinate.j;
+
+        const allSelectedEdges = edgesFromRecursiveCalls.map(e => edgeInfoSelector(e)).flat();
+        allSelectedEdges.push(...edgeInfoSelector(potentialNewEdges));
+        allSelectedEdges.forEach(e => e.sort((a, b) => coordinateComponentAccessor(a) - coordinateComponentAccessor(b))); // ensure all edges are sorted. Probably unnecessary, but heh
+        const groupedSelectedEdges = groupBy(allSelectedEdges, edge => groupingSelector(edge[0]));
+
+        for (const [_, edges] of Object.entries(groupedSelectedEdges)) {
+            edges.sort((a, b) => coordinateComponentAccessor(a[0]) - coordinateComponentAccessor(b[0])); // ensure the edges of each column are ordered
             let k = 0;
             while (k < edges.length - 1) {
-                if (edges[k][edges[k].length - 1].i + 1 !== edges[k + 1][0].i) {
-                    // these are actualy distinct edges
+                if (coordinateComponentAccessor(edges[k][edges[k].length - 1]) + 1 !== coordinateComponentAccessor(edges[k + 1][0])) {
+                    // these are actually distinct edges
                     k++;
                     continue;
                 }
 
-                // we need to merge these k and k+1 into asingle edge!
+                // we need to merge these k and k+1 into a single edge!
                 edges[k].push(...edges[k + 1]);
                 edges.splice(k + 1, 1);
             }
         }
-        return Object.values(groupedVerticalEdges).flat();
+        return Object.values(groupedSelectedEdges).flat();
     }
 }
 
@@ -229,16 +223,3 @@ type RegionEdges = {
 type Direction = 'U' | 'R' | 'D' | 'L';
 type Coordinate = { i: number, j: number };
 type EdgeInfo = Coordinate[];
-
-
-function groupBy<T, K extends keyof any>(array: T[], keySelector: (item: T) => K): Record<K, T[]> {
-    return array.reduce((acc: Record<K, T[]>, current: T) => {
-        const key = keySelector(current);
-        if (acc[key] === undefined) {
-            acc[key] = [];
-        }
-        acc[key].push(current);
-        return acc;
-    }, {} as Record<K, T[]>);
-
-}

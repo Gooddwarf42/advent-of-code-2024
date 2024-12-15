@@ -20,31 +20,17 @@ export class VectorClass {
         this.y = y;
     }
 
-    public Sum(vector: VectorClass): VectorClass {
+    public sum(vector: VectorClass): VectorClass {
         return new VectorClass(this.x + vector.x, this.y + vector.y);
     }
 
-    public Multiply(scalar: number): VectorClass {
+    public multiply(scalar: number): VectorClass {
         return new VectorClass(this.x * scalar, this.y * scalar);
     }
 
 }
 
-export function SumVectors(v1: Vector, v2: Vector): Vector {
-    return {
-        x: v1.x + v2.x,
-        y: v1.y + v2.y,
-    }
-}
-
-export function Sum(v1: Vector, v2: Vector): Vector {
-    return {
-        x: v1.x + v2.x,
-        y: v1.y + v2.y,
-    }
-}
-
-export function NiceModulo(input: number, modulo: number): number {
+export function niceModulo(input: number, modulo: number): number {
     if (modulo <= 0) {
         throw new Error("Bad modulo");
     }
@@ -53,4 +39,13 @@ export function NiceModulo(input: number, modulo: number): number {
     return standardModuloResult >= 0
         ? standardModuloResult
         : standardModuloResult + modulo;
+}
+
+export function printTable(table: string[][]): void {
+    const string = table.map(r => r.join('')).join('\n');
+    console.log(string);
+}
+
+export function deepClone<T>(input: T): T {
+    return (JSON.parse(JSON.stringify(input)) as T);
 }

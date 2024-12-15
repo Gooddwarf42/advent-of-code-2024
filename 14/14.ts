@@ -1,9 +1,9 @@
 import * as fs from 'fs';
-import {NiceModulo, Sum, VectorClass} from "../Shared/shared";
+import {deepClone, niceModulo, printTable, VectorClass} from "../Shared/shared";
 
 export class AOC14 {
     private _day: string = '14';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -67,9 +67,9 @@ export class AOC14 {
         for (const robot of parsedInput) {
 
             const finalPosition = robot.startingPosition
-                .Sum(robot.velocity.Multiply(seconds));
-            finalPosition.x = NiceModulo(finalPosition.x, mapWidth);
-            finalPosition.y = NiceModulo(finalPosition.y, mapHeight);
+                .sum(robot.velocity.multiply(seconds));
+            finalPosition.x = niceModulo(finalPosition.x, mapWidth);
+            finalPosition.y = niceModulo(finalPosition.y, mapHeight);
 
             const quadrant = checkQuadrant(finalPosition);
             if (quadrant === null) {
@@ -91,7 +91,34 @@ export class AOC14 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const mapWidth = this._test ? 11 : 101;
+        const mapHeight = this._test ? 7 : 103;
+
+        const map: ('.' | '#')[][] = Array(mapHeight).fill(Array(mapWidth).fill('.'));
+
+        const moveRobot = (robot: Robot): void => {
+            robot.startingPosition = robot.startingPosition
+                .sum(robot.velocity);
+            robot.startingPosition.x = niceModulo(robot.startingPosition.x, mapWidth);
+            robot.startingPosition.y = niceModulo(robot.startingPosition.y, mapHeight);
+        }
+
+        const upperBound = 100;
+        let counter = 1;
+        while (counter <= upperBound) {
+            const mapCopy = deepClone(map);
+            for (const robot of parsedInput) {
+                moveRobot(robot);
+                mapCopy[robot.startingPosition.y][robot.startingPosition.x] = '#';
+            }
+
+            console.log(`This is the situation after ${counter} seconds`);
+            printTable(mapCopy)
+            counter++;
+        }
+
+        console.log(counter);
     }
 
     private parseInput(input: string): Robot[] {
@@ -117,7 +144,6 @@ export class AOC14 {
 
         return robots;
     }
-
 }
 
 type Robot = { startingPosition: VectorClass, velocity: VectorClass };

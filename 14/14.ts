@@ -4,7 +4,7 @@ import {deepClone, niceModulo, printTable, VectorClass} from "../Shared/shared";
 
 export class AOC14 {
     private _day: string = '14';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -106,10 +106,10 @@ export class AOC14 {
 
         const hasPotentialChristmasTree = (position: ('.' | '#')[][]): boolean => {
             const lines = position.map(row => row.join(''));
-            return lines.some(l => l.includes('####'))
+            return lines.some(l => l.includes('##########'))
         }
 
-        const upperBound = 100;
+        const upperBound = 10000000000;
         let counter = 1;
 
 

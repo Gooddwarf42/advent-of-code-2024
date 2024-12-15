@@ -86,7 +86,7 @@ export class AOC14 {
         console.log(count);
     }
 
-    public partTwo(input: string): void {
+    public async partTwo(input: string): Promise<void> {
 
         console.log('Solving part two...');
 
@@ -111,6 +111,8 @@ export class AOC14 {
 
         const upperBound = 100;
         let counter = 1;
+
+
         while (counter <= upperBound) {
             const mapCopy = deepClone(map);
             for (const robot of parsedInput) {
@@ -121,6 +123,11 @@ export class AOC14 {
             if (hasPotentialChristmasTree(mapCopy)) {
                 console.log(`This is the situation after ${counter} seconds`);
                 printTable(mapCopy)
+
+                const userInput = await askQuestionAsync('Is this a christmas tree? [y/N]')
+                if (userInput.toLowerCase() === 'y') {
+                    break;
+                }
             }
             counter++;
         }
@@ -154,3 +161,16 @@ export class AOC14 {
 }
 
 type Robot = { startingPosition: VectorClass, velocity: VectorClass };
+
+
+function askQuestionAsync(query: string): Promise<string> {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    return new Promise(resolve => rl.question(query, ans => {
+        rl.close();
+        resolve(ans);
+    }))
+}

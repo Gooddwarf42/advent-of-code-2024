@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import readline from 'readline';
 import {deepClone, niceModulo, printTable, VectorClass} from "../Shared/shared";
 
 export class AOC14 {
@@ -80,7 +81,6 @@ export class AOC14 {
             quadrantCountMap.set(quadrant, countToIncrement + 1)
         }
 
-
         let count = 1;
         quadrantCountMap.forEach(value => count *= value)
         console.log(count);
@@ -104,6 +104,11 @@ export class AOC14 {
             robot.startingPosition.y = niceModulo(robot.startingPosition.y, mapHeight);
         }
 
+        const hasPotentialChristmasTree = (position: ('.' | '#')[][]): boolean => {
+            const lines = position.map(row => row.join(''));
+            return lines.some(l => l.includes('####'))
+        }
+
         const upperBound = 100;
         let counter = 1;
         while (counter <= upperBound) {
@@ -113,8 +118,10 @@ export class AOC14 {
                 mapCopy[robot.startingPosition.y][robot.startingPosition.x] = '#';
             }
 
-            console.log(`This is the situation after ${counter} seconds`);
-            printTable(mapCopy)
+            if (hasPotentialChristmasTree(mapCopy)) {
+                console.log(`This is the situation after ${counter} seconds`);
+                printTable(mapCopy)
+            }
             counter++;
         }
 

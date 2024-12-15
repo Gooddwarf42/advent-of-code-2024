@@ -1,5 +1,10 @@
 import * as fs from 'fs';
 
+// 1976 is not right
+// 1915 con il controllo sulla starting position
+
+// non sono 1842 (posizioni distinte, starting position esclusa
+
 export class AOC06 {
     private _day: string = '06';
     private _test: boolean = false;
@@ -53,59 +58,70 @@ export class AOC06 {
     public partTwo(input: string): void {
         console.log('Solving part two...');
 
+        function isLoop(
+            guard: {
+                position: { x: number; y: number; moving: DirectionFlag };
+                direction: DirectionFlag
+            },
+            map: string[],
+            traceMap: DirectionFlag[][]): boolean {
+
+            const currentTraceMapData = traceMap?.[guard.position.x]?.[guard.position.y];
+            if (currentTraceMapData === undefined) {
+                // console.log("loop not found!")
+                // printTraceMap(traceMap);
+                return false;
+            }
+            if ((currentTraceMapData & guard.direction) !== 0) {
+                // console.log("loop found!")
+                // printTraceMap(traceMap);
+                return true;
+            }
+
+            // Mark this place as visited
+            traceMap[guard.position.x][guard.position.y] |= guard.position.moving
+
+            const movement = directionFlagMap.get(guard.direction)!;
+            const nextCoordinates = {
+                x: guard.position.x + movement.horMovement,
+                y: guard.position.y + movement.verMovement
+            };
+            const whatIHaveInFront = map?.[nextCoordinates.x]?.[nextCoordinates.y] as PossibleCharacters | undefined;
+
+            if (whatIHaveInFront !== '#') {
+                guard.position.x = nextCoordinates.x;
+                guard.position.y = nextCoordinates.y;
+                return isLoop(guard, map, traceMap);
+            }
+
+            const nextDirection = rotateLeft<DirectionFlag>(guard.direction);
+            guard.direction = nextDirection;
+            guard.position.moving = nextDirection;
+            return isLoop(guard, map, traceMap);
+        }
+
         type PositionInfo = { x: number, y: number, moving: DirectionFlag }
         const parsedInput = this.parseInput(input);
         const startingPosition = {...findStart(parsedInput), moving: DirectionFlag.U} as PositionInfo;
 
         const traceMap: DirectionFlag[][] = Array.from({length: parsedInput.length}, () => Array(parsedInput[0].length).fill(DirectionFlag.NONE));
+        const cleanTraceMap: DirectionFlag[][] = Array.from({length: parsedInput.length}, () => Array(parsedInput[0].length).fill(DirectionFlag.NONE));
 
-        const guard = {direction: DirectionFlag.U, position: startingPosition};
-        traceMap[startingPosition.x][startingPosition.y] |= startingPosition.moving;
+        const startingGuard = {direction: DirectionFlag.U, position: JSON.parse(JSON.stringify(startingPosition))};
+        const guard = JSON.parse(JSON.stringify(startingGuard))
 
-        let loopables = 0;
+        let loopables: { x: number, y: number, str: string }[] = [];
 
-        function isLoop(
-            hypotheticalGuard: {
-                position: { x: number; y: number; moving: DirectionFlag };
-                direction: DirectionFlag
-            },
-            hypotheticalMap: string[],
-            hypotheticalTraceMap: DirectionFlag[][]): boolean {
-            const currentTraceMapData = hypotheticalTraceMap?.[hypotheticalGuard.position.x]?.[hypotheticalGuard.position.y];
+        while (true) {
+            const currentTraceMapData = traceMap?.[guard.position.x]?.[guard.position.y];
             if (currentTraceMapData === undefined) {
-                //console.log("loop not found!")
-                //printTraceMap(hypotheticalTraceMap);
-                return false;
-            }
-            if ((currentTraceMapData & hypotheticalGuard.direction) !== 0) {
-                //console.log("loop found!")
-                //printTraceMap(hypotheticalTraceMap);
-                return true;
+                // we exited the map. Break!
+                break;
             }
 
             // Mark this place as visited
-            hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] |= hypotheticalGuard.position.moving
+            traceMap[guard.position.x][guard.position.y] |= guard.position.moving
 
-            const movement = directionFlagMap.get(hypotheticalGuard.direction)!;
-            const nextCoordinates = {
-                x: hypotheticalGuard.position.x + movement.horMovement,
-                y: hypotheticalGuard.position.y + movement.verMovement
-            };
-            const whatIHaveInFront = hypotheticalMap?.[nextCoordinates.x]?.[nextCoordinates.y] as PossibleCharacters | undefined;
-
-            if (whatIHaveInFront !== '#') {
-                hypotheticalGuard.position.x = nextCoordinates.x;
-                hypotheticalGuard.position.y = nextCoordinates.y;
-                return isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap);
-            }
-
-            const nextDirection = rotateLeft<DirectionFlag>(hypotheticalGuard.direction);
-            hypotheticalGuard.direction = nextDirection;
-            hypotheticalGuard.position.moving = nextDirection;
-            return isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap);
-        }
-
-        while (true) {
             const movement = directionFlagMap.get(guard.direction)!;
             const nextCoordinates = {
                 x: guard.position.x + movement.horMovement,
@@ -117,35 +133,60 @@ export class AOC06 {
                 const nextDirection = rotateLeft<DirectionFlag>(guard.direction);
                 guard.direction = nextDirection;
                 guard.position.moving = nextDirection;
-                traceMap[guard.position.x][guard.position.y] |= guard.position.moving;
                 continue;
             }
 
             if (whatIHaveInFront === undefined) {
-                // map was exited
+                // Nothing more to do. Can't even test for loops. Just break out.
                 break;
             }
 
             // I have in front a free tile. Woudl I loop if i put an obstacle there?
-
-            const hypotheticalGuard = {direction: rotateLeft(guard.direction), position: {...guard.position}};
-            hypotheticalGuard.position.moving = hypotheticalGuard.direction; // eeewwwww I have very ill data types here...
-            const hypotheticalTraceMap: DirectionFlag[][] = JSON.parse(JSON.stringify(traceMap));
+            const hypotheticalGuard = JSON.parse(JSON.stringify(startingGuard));
+            const hypotheticalTraceMap: DirectionFlag[][] = JSON.parse(JSON.stringify(cleanTraceMap));
             const hypotheticalMap: string[] = JSON.parse(JSON.stringify(parsedInput));
-            hypotheticalMap[nextCoordinates.x] = hypotheticalMap[nextCoordinates.x].split('').splice(nextCoordinates.y, 1, '#').join('');
+            const rowToChange = hypotheticalMap[nextCoordinates.x].split('');
+            rowToChange[nextCoordinates.y] = '#';
+            hypotheticalMap[nextCoordinates.x] = rowToChange.join('');
+
+            // console.log(guard);
+            // console.log(hypotheticalGuard);
+            // for (const line of hypotheticalMap) {
+            //     console.log(line);
+            // }
 
             if (isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap)) {
-                loopables++;
+                const loopPosition = {
+                    x: nextCoordinates.x,
+                    y: nextCoordinates.y,
+                    str: JSON.stringify(nextCoordinates),
+                }
+                // console.log(loopPosition);
+                loopables.push(loopPosition);
             }
 
             guard.position.x = nextCoordinates.x;
             guard.position.y = nextCoordinates.y;
-            traceMap[guard.position.x][guard.position.y] |= guard.position.moving
         }
 
         //printTraceMap(traceMap);
 
-        console.log(loopables);
+        console.log(loopables.length);
+
+        const loopablePositionsStartingExcluded = loopables.filter(e => e.x != startingPosition.x || e.y != startingPosition.y);
+        console.log(loopablePositionsStartingExcluded.length);
+
+        const distinctLoopablePositions = loopables.reduce((acc: { x: number, y: number, str: string }[], current) => {
+            if (acc.every(e => e.str != current.str)) {
+                acc.push(current);
+            }
+            return acc;
+        }, []);
+
+        console.log(distinctLoopablePositions.length);
+
+        const distinctLoopablePositionsStartingExcluded = distinctLoopablePositions.filter(e => e.x != startingPosition.x || e.y != startingPosition.y);
+        console.log(distinctLoopablePositionsStartingExcluded.length);
     }
 
     private parseInput(input: string): string[] {

@@ -10,11 +10,12 @@ import {AOC10} from "./10/10";
 import {AOC11} from "./11/11";
 import {AOC12} from "./12/12";
 import {AOC13} from "./13/13";
+import {AOC14} from "./14/14";
 
 const welcomeMessage: string = 'I\'m running, rawr!!';
 //let message2: string = 4;
 console.log(welcomeMessage);
-const puzzle = new AOC13();
+const puzzle = new AOC14();
 const input = puzzle.readInput();
 puzzle.partOne(input);
 puzzle.partTwo(input);

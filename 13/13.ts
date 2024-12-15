@@ -1,6 +1,7 @@
 // noinspection JSSuspiciousNameCombination
 
 import * as fs from 'fs';
+import {Vector} from "../Shared/shared";
 
 export class AOC13 {
     private _day: string = '13';
@@ -149,4 +150,3 @@ export class AOC13 {
 }
 
 type Machine = { buttonA: Vector, buttonB: Vector, prize: Vector };
-type Vector = { x: number, y: number };

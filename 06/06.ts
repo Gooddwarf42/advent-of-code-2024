@@ -1,10 +1,5 @@
 import * as fs from 'fs';
 
-// 1976 is not right
-// 1915 con il controllo sulla starting position
-
-// non sono 1842 (posizioni distinte, starting position esclusa
-
 export class AOC06 {
     private _day: string = '06';
     private _test: boolean = false;
@@ -68,13 +63,9 @@ export class AOC06 {
 
             const currentTraceMapData = traceMap?.[guard.position.x]?.[guard.position.y];
             if (currentTraceMapData === undefined) {
-                // console.log("loop not found!")
-                // printTraceMap(traceMap);
                 return false;
             }
             if ((currentTraceMapData & guard.direction) !== 0) {
-                // console.log("loop found!")
-                // printTraceMap(traceMap);
                 return true;
             }
 
@@ -142,6 +133,10 @@ export class AOC06 {
             }
 
             // I have in front a free tile. Woudl I loop if i put an obstacle there?
+            // TODO refactor this day code and try to avoid both the code repetition
+            // (here and isLoop), and make sensible types. Ideally flat types, so there is no need
+            // to seriadeserilize to make deep clones. It's ugly af/
+
             const hypotheticalGuard = JSON.parse(JSON.stringify(startingGuard));
             const hypotheticalTraceMap: DirectionFlag[][] = JSON.parse(JSON.stringify(cleanTraceMap));
             const hypotheticalMap: string[] = JSON.parse(JSON.stringify(parsedInput));
@@ -149,19 +144,12 @@ export class AOC06 {
             rowToChange[nextCoordinates.y] = '#';
             hypotheticalMap[nextCoordinates.x] = rowToChange.join('');
 
-            // console.log(guard);
-            // console.log(hypotheticalGuard);
-            // for (const line of hypotheticalMap) {
-            //     console.log(line);
-            // }
-
             if (isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap)) {
                 const loopPosition = {
                     x: nextCoordinates.x,
                     y: nextCoordinates.y,
                     str: JSON.stringify(nextCoordinates),
                 }
-                // console.log(loopPosition);
                 loopables.push(loopPosition);
             }
 
@@ -169,24 +157,16 @@ export class AOC06 {
             guard.position.y = nextCoordinates.y;
         }
 
-        //printTraceMap(traceMap);
-
-        console.log(loopables.length);
-
-        const loopablePositionsStartingExcluded = loopables.filter(e => e.x != startingPosition.x || e.y != startingPosition.y);
-        console.log(loopablePositionsStartingExcluded.length);
-
-        const distinctLoopablePositions = loopables.reduce((acc: { x: number, y: number, str: string }[], current) => {
-            if (acc.every(e => e.str != current.str)) {
-                acc.push(current);
-            }
-            return acc;
-        }, []);
+        const distinctLoopablePositions = loopables
+            .filter(e => e.x != startingPosition.x || e.y != startingPosition.y)
+            .reduce((acc: { x: number, y: number, str: string }[], current) => {
+                if (acc.every(e => e.str != current.str)) {
+                    acc.push(current);
+                }
+                return acc;
+            }, []);
 
         console.log(distinctLoopablePositions.length);
-
-        const distinctLoopablePositionsStartingExcluded = distinctLoopablePositions.filter(e => e.x != startingPosition.x || e.y != startingPosition.y);
-        console.log(distinctLoopablePositionsStartingExcluded.length);
     }
 
     private parseInput(input: string): string[] {

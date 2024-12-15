@@ -64,6 +64,47 @@ export class AOC06 {
 
         let loopables = 0;
 
+        function isLoop(
+            hypotheticalGuard: {
+                position: { x: number; y: number; moving: DirectionFlag };
+                direction: DirectionFlag
+            },
+            hypotheticalMap: string[],
+            hypotheticalTraceMap: DirectionFlag[][]): boolean {
+            const currentTraceMapData = hypotheticalTraceMap?.[hypotheticalGuard.position.x]?.[hypotheticalGuard.position.y];
+            if (currentTraceMapData === undefined) {
+                //console.log("loop not found!")
+                //printTraceMap(hypotheticalTraceMap);
+                return false;
+            }
+            if ((currentTraceMapData & hypotheticalGuard.direction) !== 0) {
+                //console.log("loop found!")
+                //printTraceMap(hypotheticalTraceMap);
+                return true;
+            }
+
+            // Mark this place as visited
+            hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] |= hypotheticalGuard.position.moving
+
+            const movement = directionFlagMap.get(hypotheticalGuard.direction)!;
+            const nextCoordinates = {
+                x: hypotheticalGuard.position.x + movement.horMovement,
+                y: hypotheticalGuard.position.y + movement.verMovement
+            };
+            const whatIHaveInFront = hypotheticalMap?.[nextCoordinates.x]?.[nextCoordinates.y] as PossibleCharacters | undefined;
+
+            if (whatIHaveInFront !== '#') {
+                hypotheticalGuard.position.x = nextCoordinates.x;
+                hypotheticalGuard.position.y = nextCoordinates.y;
+                return isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap);
+            }
+
+            const nextDirection = rotateLeft<DirectionFlag>(hypotheticalGuard.direction);
+            hypotheticalGuard.direction = nextDirection;
+            hypotheticalGuard.position.moving = nextDirection;
+            return isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap);
+        }
+
         while (true) {
             const movement = directionFlagMap.get(guard.direction)!;
             const nextCoordinates = {
@@ -92,48 +133,17 @@ export class AOC06 {
             const hypotheticalTraceMap: DirectionFlag[][] = JSON.parse(JSON.stringify(traceMap));
             const hypotheticalMap: string[] = JSON.parse(JSON.stringify(parsedInput));
             hypotheticalMap[nextCoordinates.x] = hypotheticalMap[nextCoordinates.x].split('').splice(nextCoordinates.y, 1, '#').join('');
-            while (true) {
-                const loopCheckMovement = directionFlagMap.get(hypotheticalGuard.direction)!;
-                const loopCheckNextCoordinates = {
-                    x: hypotheticalGuard.position.x + loopCheckMovement.horMovement,
-                    y: hypotheticalGuard.position.y + loopCheckMovement.verMovement
-                };
-                const loopCheckWhatIHaveInFront = hypotheticalMap?.[loopCheckNextCoordinates.x]?.[loopCheckNextCoordinates.y] as PossibleCharacters | undefined;
 
-                if (loopCheckWhatIHaveInFront === '#') {
-                    const loopChecknextDirection = rotateLeft<DirectionFlag>(hypotheticalGuard.direction);
-                    hypotheticalGuard.direction = loopChecknextDirection;
-                    hypotheticalGuard.position.moving = loopChecknextDirection;
-
-                    if ((hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] & hypotheticalGuard.direction) !== 0) {
-                        loopables++;
-                        break;
-                    }
-
-                    hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] |= hypotheticalGuard.position.moving;
-                    continue;
-                }
-
-                if (loopCheckWhatIHaveInFront === undefined) {
-                    // map was exited
-                    break;
-                }
-
-                hypotheticalGuard.position.x = loopCheckNextCoordinates.x;
-                hypotheticalGuard.position.y = loopCheckNextCoordinates.y;
-
-                if ((hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] & hypotheticalGuard.direction) !== 0) {
-                    loopables++;
-                    break;
-                }
-
-                hypotheticalTraceMap[hypotheticalGuard.position.x][hypotheticalGuard.position.y] |= hypotheticalGuard.position.moving
+            if (isLoop(hypotheticalGuard, hypotheticalMap, hypotheticalTraceMap)) {
+                loopables++;
             }
 
             guard.position.x = nextCoordinates.x;
             guard.position.y = nextCoordinates.y;
             traceMap[guard.position.x][guard.position.y] |= guard.position.moving
         }
+
+        //printTraceMap(traceMap);
 
         console.log(loopables);
     }
@@ -215,3 +225,24 @@ const directionFlagMap: Map<DirectionFlag, { horMovement: number, verMovement: n
     [DirectionFlag.D, {horMovement: 1, verMovement: 0}],
     [DirectionFlag.L, {horMovement: 0, verMovement: -1}],
 ]);
+
+function printTraceMap(traceMap: DirectionFlag[][]): void {
+    const selectCharacter = (f: DirectionFlag): string => {
+        const isVertical = (f & (DirectionFlag.U | DirectionFlag.D)) !== 0;
+        const isHorizontal = (f & (DirectionFlag.R | DirectionFlag.L)) !== 0;
+
+        if (isVertical && isHorizontal) {
+            return '+';
+        }
+        if (isVertical) {
+            return '|';
+        }
+        if (isHorizontal) {
+            return '-';
+        }
+        return '.';
+    };
+
+    const string = traceMap.map(row => row.map(selectCharacter).join('')).join('\n');
+    console.log(string);
+}

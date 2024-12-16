@@ -26,7 +26,7 @@ export class AOC15 {
             // console.log('');
         }
 
-        printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
+        printState(parsedInput.map[0].length, parsedInput.map.length, parsedInput.state);
         let count = 0;
         for (const box of parsedInput.state.boxes) {
             count += box.gpsCoordinates;
@@ -40,7 +40,10 @@ export class AOC15 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const bigState = enlargeWarehouse(parsedInput.state);
+        printBigState(2 * parsedInput.map[0].length, parsedInput.map.length, bigState);
+
     }
 
     private parseInput(input: string): { map: MapTile[][], state: State, movements: Direction[] } {
@@ -98,6 +101,16 @@ type State = {
     all: Entity[]
 };
 
+function enlargeWarehouse(state: State): State {
+    const boxes = state.boxes.map(b => new BigBox(b.x, 2 * b.y));
+    const walls = state.walls.map(w => new BigWall(w.x, 2 * w.y));
+    const robot = new Robot(state.robot.x, 2 * state.robot.y);
+    const all = [];
+    all.push(...boxes, ...walls);
+
+    return {boxes, walls, robot, all}
+}
+
 function printState(width: number, height: number, state: State) {
     const map = Array.from({length: height}, () => Array(width).fill('.'));
 
@@ -111,10 +124,12 @@ function printState(width: number, height: number, state: State) {
 }
 
 function printBigState(width: number, height: number, state: State) {
-    const map = Array.from({length: height}, () => Array(width).fill('..'));
+    const map = Array.from({length: height}, () => Array(width).fill('.'));
 
     for (const entity of state.all) {
-        map[entity.x][entity.y] = entity.character;
+        // ugly
+        map[entity.x][entity.y] = entity.character[0];
+        map[entity.x][entity.y + 1] = entity.character[1];
     }
 
     map[state.robot.x][state.robot.y] = state.robot.character;

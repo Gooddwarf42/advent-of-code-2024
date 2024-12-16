@@ -18,12 +18,12 @@ export class AOC15 {
         console.log('Solving part one...');
 
         const parsedInput = this.parseInput(input);
-
+        printState(parsedInput.map[0].length, parsedInput.map.length, parsedInput.state);
         for (const movement of parsedInput.movements) {
             parsedInput.state.robot.move(parsedInput.state, movement);
-            // console.log(`Moving ${movement}:`);
-            // printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
-            // console.log('');
+            console.log(`Moving ${movement}:`);
+            printState(parsedInput.map[0].length, parsedInput.map.length, parsedInput.state);
+            console.log('');
         }
 
         printState(parsedInput.map[0].length, parsedInput.map.length, parsedInput.state);
@@ -186,6 +186,15 @@ abstract class Entity {
         const potentialY = this.y + offset.verMovement;
 
         const hitsEntity = (e: Entity, x: number, y: number): boolean => {
+            if (direction === ">") {
+                // compensating horizontal movements
+                y += (this.width - 1);
+            }
+            if (direction === "<") {
+                // compensating horizontal movements
+                y -= (this.width - 1);
+            }
+
             return x === e.x
                 && e.y <= y && y < e.y + e.width;
         }
@@ -203,6 +212,15 @@ abstract class Entity {
         const potentialY = this.y + offset.verMovement;
 
         const hitsEntity = (e: Entity, x: number, y: number): boolean => {
+            if (direction === ">") {
+                // compensating horizontal movements
+                y += (this.width - 1);
+            }
+            if (direction === "<") {
+                // compensating horizontal movements
+                y -= (this.width - 1);
+            }
+
             return x === e.x
                 && e.y <= y && y < e.y + e.width;
         }

@@ -32,7 +32,6 @@ export class AOC15 {
             count += box.gpsCoordinates;
         }
 
-
         console.log(count);
     }
 
@@ -44,6 +43,21 @@ export class AOC15 {
         const bigState = enlargeWarehouse(parsedInput.state);
         printBigState(2 * parsedInput.map[0].length, parsedInput.map.length, bigState);
 
+        for (const movement of parsedInput.movements) {
+            bigState.robot.move(bigState, movement);
+            console.log(`Moving ${movement}:`);
+            printBigState(2 * parsedInput.map[0].length, parsedInput.map.length, bigState);
+            console.log('');
+        }
+
+        printBigState(2 * parsedInput.map[0].length, parsedInput.map.length, bigState);
+
+        let count = 0;
+        for (const box of bigState.boxes) {
+            count += box.gpsCoordinates;
+        }
+
+        console.log(count);
     }
 
     private parseInput(input: string): { map: MapTile[][], state: State, movements: Direction[] } {

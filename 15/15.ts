@@ -3,7 +3,7 @@ import {assertNever, printTable} from "../Shared/shared";
 
 export class AOC15 {
     private _day: string = '15';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -21,16 +21,13 @@ export class AOC15 {
 
         for (const movement of parsedInput.movements) {
             parsedInput.state.robot.move(parsedInput.state, movement);
-            // console.log(`Moving ${movement}:`);
-            // printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
-            // console.log('');
         }
 
-        printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
         let count = 0;
         for (const box of parsedInput.state.boxes) {
             count += box.gpsCoordinates;
         }
+
         console.log(count);
     }
 
@@ -55,21 +52,23 @@ export class AOC15 {
 
         for (let i = 0; i < map.length; i++) {
             for (let j = 0; j < map[i].length; j++) {
-                if (map[i][j] === '.') {
+                const currentTile = map[i][j];
+                if (currentTile === '.') {
                     continue;
                 }
-                if (map[i][j] === '@') {
+                if (currentTile === '@') {
                     state.robot = new Robot(i, j);
                     continue;
                 }
-                if (map[i][j] === 'O') {
+                if (currentTile === 'O') {
                     state.boxes.push(new Box(i, j));
                     continue;
                 }
-                if (map[i][j] === '#') {
+                if (currentTile === '#') {
                     state.walls.push(new Wall(i, j));
                     continue;
                 }
+                assertNever(currentTile);
             }
         }
 

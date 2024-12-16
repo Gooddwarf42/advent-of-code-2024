@@ -19,12 +19,14 @@ export class AOC15 {
 
         const parsedInput = this.parseInput(input);
 
-        printTable(parsedInput.map);
-
         for (const movement of parsedInput.movements) {
             parsedInput.state.robot.move(parsedInput.state, movement);
+            // console.log(`Moving ${movement}:`);
+            // printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
+            // console.log('');
         }
 
+        printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
         let count = 0;
         for (const box of parsedInput.state.boxes) {
             count += box.gpsCoordinates;
@@ -90,6 +92,18 @@ type State = {
     all: Entity[]
 };
 
+function printState(width: number, height: number, state: State) {
+    const map = Array.from({length: height}, () => Array(width).fill('.'));
+
+    for (const entity of state.all) {
+        map[entity.x][entity.y] = entity.character;
+    }
+
+    map[state.robot.x][state.robot.y] = state.robot.character;
+
+    printTable(map);
+}
+
 function getOffset(direction: Direction): { horMovement: number, verMovement: number } {
 
     switch (direction) {
@@ -110,6 +124,8 @@ function getOffset(direction: Direction): { horMovement: number, verMovement: nu
 abstract class Entity {
     public x: number;
     public y: number;
+
+    public abstract character: EntityType;
 
     constructor(x: number, y: number) {
         this.x = x;
@@ -154,18 +170,22 @@ abstract class Entity {
     }
 
     public get gpsCoordinates() {
-        return 100 * this.x * this.y;
+        return 100 * this.x + this.y;
     }
 }
 
 class Box extends Entity {
+    public character: EntityType = 'O';
 }
 
 class Wall extends Entity {
+    public character: EntityType = '#';
+
     canMove(state: State, direction: Direction): boolean {
         return false;
     }
 }
 
 class Robot extends Entity {
+    public character: EntityType = '@';
 }

@@ -3,7 +3,7 @@ import {assertNever, printTable} from "../Shared/shared";
 
 export class AOC15 {
     private _day: string = '15';
-    private _test: boolean = false;
+    private _test: boolean = true;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -21,12 +21,17 @@ export class AOC15 {
 
         for (const movement of parsedInput.movements) {
             parsedInput.state.robot.move(parsedInput.state, movement);
+            // console.log(`Moving ${movement}:`);
+            // printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
+            // console.log('');
         }
 
+        printState(parsedInput.map.length, parsedInput.map[0].length, parsedInput.state);
         let count = 0;
         for (const box of parsedInput.state.boxes) {
             count += box.gpsCoordinates;
         }
+
 
         console.log(count);
     }
@@ -82,17 +87,31 @@ export class AOC15 {
 }
 
 type EntityType = '#' | '@' | 'O';
+type ExtendedEntityType = EntityType | '[]' | '##';
 type Direction = '^' | '>' | 'v' | '<';
 type MapTile = EntityType | '.';
+type ExtendedMapTile = ExtendedEntityType | '.';
 type State = {
-    boxes: Box[],
-    walls: Wall[],
+    boxes: (Box | BigBox)[],
+    walls: (Wall | BigWall)[],
     robot: Robot,
     all: Entity[]
 };
 
 function printState(width: number, height: number, state: State) {
     const map = Array.from({length: height}, () => Array(width).fill('.'));
+
+    for (const entity of state.all) {
+        map[entity.x][entity.y] = entity.character;
+    }
+
+    map[state.robot.x][state.robot.y] = state.robot.character;
+
+    printTable(map);
+}
+
+function printBigState(width: number, height: number, state: State) {
+    const map = Array.from({length: height}, () => Array(width).fill('..'));
 
     for (const entity of state.all) {
         map[entity.x][entity.y] = entity.character;
@@ -123,8 +142,9 @@ function getOffset(direction: Direction): { horMovement: number, verMovement: nu
 abstract class Entity {
     public x: number;
     public y: number;
+    public width: number = 1;
 
-    public abstract character: EntityType;
+    public abstract character: ExtendedEntityType;
 
     constructor(x: number, y: number) {
         this.x = x;
@@ -136,7 +156,12 @@ abstract class Entity {
         const potentialX = this.x + offset.horMovement;
         const potentialY = this.y + offset.verMovement;
 
-        const entityInFront = state.all.find(e => e.x === potentialX && e.y === potentialY);
+        const hitsEntity = (e: Entity, x: number, y: number): boolean => {
+            return x === e.x
+                && e.y <= y && y < e.y + e.width;
+        }
+
+        const entityInFront = state.all.find(e => hitsEntity(e, potentialX, potentialY));
 
         return entityInFront === undefined
             ? true
@@ -148,7 +173,12 @@ abstract class Entity {
         const potentialX = this.x + offset.horMovement;
         const potentialY = this.y + offset.verMovement;
 
-        const entityInFront = state.all.find(e => e.x === potentialX && e.y === potentialY);
+        const hitsEntity = (e: Entity, x: number, y: number): boolean => {
+            return x === e.x
+                && e.y <= y && y < e.y + e.width;
+        }
+
+        const entityInFront = state.all.find(e => hitsEntity(e, potentialX, potentialY));
 
         if (entityInFront === undefined) {
             // can move freely!
@@ -174,17 +204,31 @@ abstract class Entity {
 }
 
 class Box extends Entity {
-    public character: EntityType = 'O';
+    public character: ExtendedEntityType = 'O';
 }
 
 class Wall extends Entity {
-    public character: EntityType = '#';
+    public character: ExtendedEntityType = '#';
 
     canMove(state: State, direction: Direction): boolean {
         return false;
     }
 }
 
+class BigBox extends Entity {
+    public character: ExtendedEntityType = '[]';
+    public width: number = 2;
+}
+
+class BigWall extends Entity {
+    public character: ExtendedEntityType = '##';
+    public width: number = 2;
+
+    override canMove(state: State, direction: Direction): boolean {
+        return false;
+    }
+}
+
 class Robot extends Entity {
-    public character: EntityType = '@';
+    public character: ExtendedEntityType = '@';
 }

@@ -18,7 +18,7 @@ export class AOC17 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log('TODO');
+        console.log(parsedInput);
     }
 
     public partTwo(input: string): void {
@@ -28,8 +28,35 @@ export class AOC17 {
         console.log('TODO');
     }
 
-    private parseInput(input: string): string[] {
-        return input.split("\n");
+    private parseInput(input: string): { state: State, program: ProgramData[] } {
+        const parts = input.split("\n\n");
+
+        const getRegisterValue = (str: string): number => {
+            const splot = str.split(": ");
+            return parseInt(splot[1], 10);
+        }
+
+        const registers = parts[0].split('\n');
+
+        const state = {
+            A: getRegisterValue(registers[0]),
+            B: getRegisterValue(registers[1]),
+            C: getRegisterValue(registers[2]),
+            PC: 0
+        };
+
+        const programString = parts[1].split(': ');
+        const program = programString[1].split(",").map(s => parseInt(s)) as ProgramData[];
+        return {state, program};
     }
 
+}
+
+type ProgramData = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+type State = {
+    A: number,
+    B: number,
+    C: number,
+    PC: number
 }

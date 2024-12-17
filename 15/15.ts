@@ -200,6 +200,11 @@ abstract class Entity {
         }
 
         const entitiesInFront = state.all.filter(e => hitsEntity(e, potentialX, potentialY));
+        for (let i = 1; i < this.width; i++) {
+            const moreEntitiesInFront = state.all.filter(e => hitsEntity(e, potentialX, potentialY + i))
+            // distingt?
+            entitiesInFront.push(...moreEntitiesInFront);
+        }
 
         return entitiesInFront.length === 0
             ? true
@@ -226,6 +231,13 @@ abstract class Entity {
         }
 
         const entitiesInFront = state.all.filter(e => hitsEntity(e, potentialX, potentialY));
+        if (direction === "^" || direction === "v") {
+            for (let i = 1; i < this.width; i++) {
+                const moreEntitiesInFront = state.all.filter(e => hitsEntity(e, potentialX, potentialY + i))
+                // distingt?
+                entitiesInFront.push(...moreEntitiesInFront);
+            }
+        }
 
         if (entitiesInFront.length === 0) {
             // can move freely!
@@ -250,7 +262,8 @@ abstract class Entity {
     }
 }
 
-class Box extends Entity {
+class Box
+    extends Entity {
     public character: ExtendedEntityType = 'O';
 }
 

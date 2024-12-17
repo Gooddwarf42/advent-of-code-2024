@@ -199,11 +199,11 @@ abstract class Entity {
                 && e.y <= y && y < e.y + e.width;
         }
 
-        const entityInFront = state.all.find(e => hitsEntity(e, potentialX, potentialY));
+        const entitiesInFront = state.all.filter(e => hitsEntity(e, potentialX, potentialY));
 
-        return entityInFront === undefined
+        return entitiesInFront.length === 0
             ? true
-            : entityInFront.canMove(state, direction);
+            : entitiesInFront.every(e => e.canMove(state, direction));
     }
 
     public move(state: State, direction: Direction): void {
@@ -225,9 +225,9 @@ abstract class Entity {
                 && e.y <= y && y < e.y + e.width;
         }
 
-        const entityInFront = state.all.find(e => hitsEntity(e, potentialX, potentialY));
+        const entitiesInFront = state.all.filter(e => hitsEntity(e, potentialX, potentialY));
 
-        if (entityInFront === undefined) {
+        if (entitiesInFront.length === 0) {
             // can move freely!
 
             this.x = potentialX;
@@ -235,12 +235,12 @@ abstract class Entity {
             return;
         }
 
-        if (!entityInFront.canMove(state, direction)) {
+        if (!entitiesInFront.every(e => e.canMove(state, direction))) {
             return;
         }
 
         // can move pushing the entity in front
-        entityInFront.move(state, direction);
+        entitiesInFront.forEach(e => e.move(state, direction));
         this.x = potentialX;
         this.y = potentialY;
     }

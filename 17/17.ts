@@ -3,7 +3,7 @@ import {assertNever} from "../Shared/shared";
 
 export class AOC17 {
     private _day: string = '17';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -18,8 +18,14 @@ export class AOC17 {
         console.log('Solving part one...');
 
         const parsedInput = this.parseInput(input);
+        const outputBuffer: number[] = [];
 
-        console.log(parsedInput);
+        while (parsedInput.state.PC < parsedInput.program.length) {
+            const command = getCommand(parsedInput.program[parsedInput.state.PC]);
+            command.execute(parsedInput.state, parsedInput.program, outputBuffer);
+        }
+
+        console.log(outputBuffer.join(','));
     }
 
     public partTwo(input: string): void {
@@ -62,6 +68,29 @@ type State = {
     PC: number
 }
 
+function getCommand(opCode: ProgramData): Command {
+    switch (opCode) {
+        case 0:
+            return new ADV();
+        case 1:
+            return new BXL();
+        case 2:
+            return new BST();
+        case 3:
+            return new JNZ();
+        case 4:
+            return new BXC();
+        case 5:
+            return new OUT();
+        case 6:
+            return new BDV();
+        case 7:
+            return new CDV();
+        default:
+            assertNever(opCode);
+    }
+}
+
 function getComboOperandValue(operand: ProgramData, state: State): number {
     switch (operand) {
         case 0:
@@ -99,23 +128,23 @@ abstract class Command {
         }
     }
 
-    public execute(state: State, program: ProgramData[]): void {
-        this.executeInternal(state, program);
+    public execute(state: State, program: ProgramData[], outputBuffer: number[]): void {
+        this.executeInternal(state, program, outputBuffer);
         state.PC += this.pcIncrement;
     }
 
-    protected abstract executeInternal(state: State, program: ProgramData[]): void;
+    protected abstract executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void;
 }
 
 class ADV extends Command {
     override opcode: ProgramData = 0;
     override operandType: 'literal' | 'combo' = 'combo';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         const numerator = state.A;
         const denominator = 2 ** this.getOperand(state, program);
 
-        state.A = Math.floor(denominator / numerator);
+        state.A = Math.floor(numerator / denominator);
     }
 }
 
@@ -123,7 +152,7 @@ class BXL extends Command {
     override opcode: ProgramData = 1;
     override operandType: 'literal' | 'combo' = 'literal';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         state.B = state.B ^ this.getOperand(state, program);
     }
 }
@@ -132,7 +161,7 @@ class BST extends Command {
     override opcode: ProgramData = 2;
     override operandType: 'literal' | 'combo' = 'combo';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         state.B = this.getOperand(state, program) % 8;
     }
 }
@@ -143,7 +172,7 @@ class JNZ extends Command {
     override operandType: 'literal' | 'combo' = 'literal';
     override pcIncrement: number = 0;
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         if (state.A === 0) {
             state.PC += 2; // we do this manually for the special case where we do not jump
             return;
@@ -157,7 +186,7 @@ class BXC extends Command {
     override opcode: ProgramData = 4;
     override operandType: 'literal' | 'combo' = 'literal';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         state.B = state.B ^ state.C;
     }
 }
@@ -166,9 +195,8 @@ class OUT extends Command {
     override opcode: ProgramData = 5;
     override operandType: 'literal' | 'combo' = 'combo';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
-        // TODO;
-        console.log(this.getOperand(state, program) % 8);
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
+        outputBuffer.push(this.getOperand(state, program) % 8);
     }
 }
 
@@ -176,11 +204,11 @@ class BDV extends Command {
     override opcode: ProgramData = 6;
     override operandType: 'literal' | 'combo' = 'combo';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         const numerator = state.A;
         const denominator = 2 ** this.getOperand(state, program);
 
-        state.B = Math.floor(denominator / numerator);
+        state.B = Math.floor(numerator / denominator);
     }
 }
 
@@ -188,10 +216,10 @@ class CDV extends Command {
     override opcode: ProgramData = 6;
     override operandType: 'literal' | 'combo' = 'combo';
 
-    override executeInternal(state: State, program: ProgramData[]): void {
+    override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         const numerator = state.A;
         const denominator = 2 ** this.getOperand(state, program);
 
-        state.C = Math.floor(denominator / numerator);
+        state.C = Math.floor(numerator / denominator);
     }
 }

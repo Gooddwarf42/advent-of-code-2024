@@ -49,3 +49,7 @@ export function printTable(table: string[][]): void {
 export function deepClone<T>(input: T): T {
     return (JSON.parse(JSON.stringify(input)) as T);
 }
+
+export function createBidimensionalArray<T>(height: number, width: number, fill: T): T[][] {
+    return Array.from({length: height}, () => Array(width).fill(fill));
+}

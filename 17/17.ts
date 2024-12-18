@@ -32,7 +32,55 @@ export class AOC17 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const upperBound = 40000000;
+        let attemptedA = 30000000;
+        let thisAIsGood = false;
+
+        while (!thisAIsGood && attemptedA < upperBound) {
+            if (attemptedA % 100000 === 0) {
+                console.log(`Attempting A: ${attemptedA}`);
+            }
+
+            const outputBuffer: number[] = [];
+            const state = {...parsedInput.state};
+            state.A = attemptedA;
+
+            // execute program
+            while (state.PC < parsedInput.program.length) {
+                const command = getCommand(parsedInput.program[state.PC]);
+                command.execute(state, parsedInput.program, outputBuffer);
+
+                if (command.opcode !== 5) {
+                    continue;
+                }
+
+                // ugly way to check if it is an out command.
+                // In this case we have outputted a value, so we
+                // check it against the program
+                const lastIndex = outputBuffer.length - 1;
+
+                // if current value is different, break out in any case
+                if (outputBuffer[lastIndex] !== parsedInput.program[lastIndex]) {
+                    break;
+                }
+
+                if (outputBuffer.length < parsedInput.program.length) {
+                    // we still have to do things
+                    continue;
+                }
+
+                //  we are checking the last possible value amd they all are equal!
+                thisAIsGood = true;
+                break;
+            }
+
+            if (!thisAIsGood) {
+                attemptedA++;
+            }
+        }
+
+        console.log(attemptedA);
     }
 
     private parseInput(input: string): { state: State, program: ProgramData[] } {

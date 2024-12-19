@@ -33,54 +33,10 @@ export class AOC17 {
 
         const parsedInput = this.parseInput(input);
 
-        const upperBound = 40000000;
-        let attemptedA = 30000000;
-        let thisAIsGood = false;
-
-        while (!thisAIsGood && attemptedA < upperBound) {
-            if (attemptedA % 100000 === 0) {
-                console.log(`Attempting A: ${attemptedA}`);
-            }
-
-            const outputBuffer: number[] = [];
-            const state = {...parsedInput.state};
-            state.A = attemptedA;
-
-            // execute program
-            while (state.PC < parsedInput.program.length) {
-                const command = getCommand(parsedInput.program[state.PC]);
-                command.execute(state, parsedInput.program, outputBuffer);
-
-                if (command.opcode !== 5) {
-                    continue;
-                }
-
-                // ugly way to check if it is an out command.
-                // In this case we have outputted a value, so we
-                // check it against the program
-                const lastIndex = outputBuffer.length - 1;
-
-                // if current value is different, break out in any case
-                if (outputBuffer[lastIndex] !== parsedInput.program[lastIndex]) {
-                    break;
-                }
-
-                if (outputBuffer.length < parsedInput.program.length) {
-                    // we still have to do things
-                    continue;
-                }
-
-                //  we are checking the last possible value amd they all are equal!
-                thisAIsGood = true;
-                break;
-            }
-
-            if (!thisAIsGood) {
-                attemptedA++;
-            }
+        while (parsedInput.state.PC < parsedInput.program.length) {
+            const command = getCommand(parsedInput.program[parsedInput.state.PC]);
+            command.print(parsedInput.state, parsedInput.program);
         }
-
-        console.log(attemptedA);
     }
 
     private parseInput(input: string): { state: State, program: ProgramData[] } {
@@ -159,6 +115,26 @@ function getComboOperandValue(operand: ProgramData, state: State): number {
     }
 }
 
+function getComboOperandString(operand: ProgramData, state: State): string {
+    switch (operand) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            return operand.toString();
+        case 4:
+            return 'A';
+        case 5:
+            return 'B';
+        case 6:
+            return 'C';
+        case 7:
+            throw Error('Reserved combo operand');
+        default:
+            assertNever(operand);
+    }
+}
+
 abstract class Command {
     abstract opcode: ProgramData;
     abstract operandType: 'literal' | 'combo';
@@ -176,12 +152,31 @@ abstract class Command {
         }
     }
 
+    protected getOperandString(state: State, program: ProgramData[]): string {
+        const operand = program[state.PC + 1];
+        switch (this.operandType) {
+            case 'literal':
+                return operand.toString();
+            case 'combo':
+                return getComboOperandString(operand, state);
+            default:
+                assertNever(this.operandType);
+        }
+    }
+
     public execute(state: State, program: ProgramData[], outputBuffer: number[]): void {
         this.executeInternal(state, program, outputBuffer);
         state.PC += this.pcIncrement;
     }
 
+    public print(state: State, program: ProgramData[]): void {
+        console.log(`${this.opcodeToString(state, program)} ${this.getOperandString(state, program)}`);
+        state.PC += 2;
+    }
+
     protected abstract executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void;
+
+    protected abstract opcodeToString(state: State, program: ProgramData[]): string;
 }
 
 class ADV extends Command {
@@ -194,6 +189,10 @@ class ADV extends Command {
 
         state.A = Math.floor(numerator / denominator);
     }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "A = A / (2 ** operand)";
+    }
 }
 
 class BXL extends Command {
@@ -203,6 +202,10 @@ class BXL extends Command {
     override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         state.B = state.B ^ this.getOperand(state, program);
     }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "B = B ^";
+    }
 }
 
 class BST extends Command {
@@ -211,6 +214,10 @@ class BST extends Command {
 
     override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         state.B = this.getOperand(state, program) % 8;
+    }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "B = 0bx111 &";
     }
 }
 
@@ -228,6 +235,10 @@ class JNZ extends Command {
 
         state.PC = this.getOperand(state, program);
     }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "jnz //";
+    }
 }
 
 class BXC extends Command {
@@ -237,6 +248,10 @@ class BXC extends Command {
     override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         state.B = state.B ^ state.C;
     }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "B = B ^ C //";
+    }
 }
 
 class OUT extends Command {
@@ -245,6 +260,10 @@ class OUT extends Command {
 
     override executeInternal(state: State, program: ProgramData[], outputBuffer: number[]): void {
         outputBuffer.push(this.getOperand(state, program) % 8);
+    }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "out";
     }
 }
 
@@ -258,6 +277,10 @@ class BDV extends Command {
 
         state.B = Math.floor(numerator / denominator);
     }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "B = A / (2 ** operand)";
+    }
 }
 
 class CDV extends Command {
@@ -269,5 +292,9 @@ class CDV extends Command {
         const denominator = 2 ** this.getOperand(state, program);
 
         state.C = Math.floor(numerator / denominator);
+    }
+
+    protected opcodeToString(state: State, program: ProgramData[]): string {
+        return "C = A / (2 ** operand)";
     }
 }

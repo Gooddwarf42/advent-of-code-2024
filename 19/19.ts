@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import {sum} from "../Shared/shared";
 
 export class AOC19 {
     private _day: string = '19';
@@ -121,8 +122,4 @@ export class AOC19 {
             ? setResult(undefined)
             : setResult(sum(...possibilities));
     }
-}
-
-export function sum(...values: number[]): number {
-    return values.reduce((acc: number, v: number) => acc + v, 0);
 }

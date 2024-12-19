@@ -18,7 +18,7 @@ export class AOC19 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log('TODO');
+        console.log(parsedInput);
     }
 
     public partTwo(input: string): void {
@@ -28,8 +28,15 @@ export class AOC19 {
         console.log('TODO');
     }
 
-    private parseInput(input: string): string[] {
-        return input.split("\n");
-    }
+    private parseInput(input: string): { towels: Towel[], requests: Color[][] } {
+        const parts = input.split("\n\n");
 
+        const towels = parts[0].split(', ').map(rawTowel => rawTowel.split('')) as Towel[];
+        const requests = parts[1].split('\n').map(rawTowel => rawTowel.split('')) as Color[][];
+
+        return {towels, requests};
+    }
 }
+
+type Color = 'r' | 'g' | 'u' | 'b' | 'w';
+type Towel = Color[];

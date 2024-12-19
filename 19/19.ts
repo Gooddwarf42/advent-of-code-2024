@@ -20,14 +20,12 @@ export class AOC19 {
 
         let possible = 0;
         for (const request of parsedInput.requests) {
-            console.log('evaluating request', request);
             const towelsNeeded = this.minimumAmountOfTowelsNeededForThis(request, parsedInput.towels);
             if (towelsNeeded !== undefined) {
                 possible++;
             }
         }
 
-        console.log(this._minimumAmountOfTowelsNeededCacheHits);
         console.log(possible);
     }
 
@@ -38,14 +36,12 @@ export class AOC19 {
 
         let combinations = 0;
         for (const request of parsedInput.requests) {
-            console.log('evaluating request', request);
             const towelCombinations = this.possibleTowelCombinationsForThis(request, parsedInput.towels);
             if (towelCombinations !== undefined) {
                 combinations += towelCombinations;
             }
         }
 
-        console.log(this._possibleTowelCombinationsCacheHits);
         console.log(combinations);
     }
 
@@ -65,9 +61,7 @@ export class AOC19 {
     private _possibleTowelCombinationsCacheHits: number = 0;
 
     private minimumAmountOfTowelsNeededForThis(request: string, towels: string[]): number | undefined {
-        // console.log(this._cacheHits);
-        // console.log(this._minimumAmountOfTowelsNeededCache.size);
-        // console.log(request);
+
         if (this._minimumAmountOfTowelsNeededCache.has(request)) {
             this._minimumAmountOfTowelsNeededCacheHits++;
             return this._minimumAmountOfTowelsNeededCache.get(request);
@@ -98,10 +92,6 @@ export class AOC19 {
     }
 
     private possibleTowelCombinationsForThis(request: string, towels: string[]): number | undefined {
-
-        // console.log(request);
-        // console.log(this._possibleTowelCombinationsCacheHits);
-        // console.log(this._possibleTowelCombinationsCache.size);
 
         if (this._possibleTowelCombinationsCache.has(request)) {
             this._possibleTowelCombinationsCacheHits++;

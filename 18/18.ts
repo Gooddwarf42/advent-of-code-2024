@@ -33,7 +33,7 @@ export class AOC18 {
         for (let i = 0; i < this.bytesToFall; i++) {
             map[parsedInput[i].y] [parsedInput[i].x] = '#';
         }
-        
+
         const minimumPath = this.findMinimumPath(map);
 
         console.log(minimumPath);
@@ -44,22 +44,47 @@ export class AOC18 {
 
         const parsedInput = this.parseInput(input);
 
-        const map: ('.' | '#')[][] = createBidimensionalArray(this.size, this.size, '.' as ('.' | '#'));
+        const cleanMap: ('.' | '#')[][] = createBidimensionalArray(this.size, this.size, '.' as ('.' | '#'));
 
-        let i = 0;
-        while (i < parsedInput.length) {
-            map[parsedInput[i].y] [parsedInput[i].x] = '#';
-            
-            const minimumPath = this.findMinimumPath(map);
+        let lb = 0;
+        let ub = parsedInput.length - 1;
 
-            if (minimumPath === undefined) {
+        while (lb - ub < 2) {
+            // Handle final cases
+            if (lb === ub) {
                 break;
             }
 
-            i++;
+            const i = lb + Math.floor((ub - lb) / 2);
+            // TODO improve this, ma non ho voglia adesso
+            const map = deepClone(cleanMap);
+            for (let j = 0; j < i; j++) {
+                map[parsedInput[j].y] [parsedInput[j].x] = '#';
+            }
+
+            // console.log(`-----lb: ${lb} -----ub: ${ub} -------i: ${i} -------------`);
+            // printTable(map);
+            // console.log('------------------------------------\n\n');
+
+            const minimumPath = this.findMinimumPath(map);
+
+            if (minimumPath === undefined) {
+                ub = i;
+                continue;
+            }
+
+            // Handle final cases
+            if (lb + 1 === ub) {
+                // in this case, i = lb. and  minimumPath is not undefined (meaning lb is not the answer)
+                // so we just update lb and break out
+                lb = ub;
+                break;
+            }
+
+            lb = i;
         }
 
-        console.log(parsedInput[i]);
+        console.log(parsedInput[lb - 1]);
     }
 
     private parseInput(input: string): { x: number, y: number }[] {

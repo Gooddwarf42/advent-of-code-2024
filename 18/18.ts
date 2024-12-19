@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 
-import {createBidimensionalArray, printTable} from "../Shared/shared";
+import {createBidimensionalArray, deepClone, printTable} from "../Shared/shared";
 
 export class AOC18 {
     private _day: string = '18';
@@ -33,8 +33,7 @@ export class AOC18 {
         for (let i = 0; i < this.bytesToFall; i++) {
             map[parsedInput[i].y] [parsedInput[i].x] = '#';
         }
-
-        printTable(map);
+        
         const minimumPath = this.findMinimumPath(map);
 
         console.log(minimumPath);
@@ -44,7 +43,23 @@ export class AOC18 {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        const map: ('.' | '#')[][] = createBidimensionalArray(this.size, this.size, '.' as ('.' | '#'));
+
+        let i = 0;
+        while (i < parsedInput.length) {
+            map[parsedInput[i].y] [parsedInput[i].x] = '#';
+            
+            const minimumPath = this.findMinimumPath(map);
+
+            if (minimumPath === undefined) {
+                break;
+            }
+
+            i++;
+        }
+
+        console.log(parsedInput[i]);
     }
 
     private parseInput(input: string): { x: number, y: number }[] {
@@ -59,7 +74,7 @@ export class AOC18 {
         return result;
     }
 
-    private findMinimumPath(map: ("." | "#")[][]): number {
+    private findMinimumPath(map: ("." | "#")[][]): number | undefined {
         const queue: { i: number, j: number }[] = [{i: this.size - 1, j: this.size - 1}];
         const minimumPaths = createBidimensionalArray<number | undefined>(this.size, this.size, undefined);
         minimumPaths[this.size - 1][this.size - 1] = 0;
@@ -102,11 +117,6 @@ export class AOC18 {
                 minimumPaths[neighbour.i][neighbour.j] = minimumPathFromHere + 1;
                 queue.push(neighbour);
             }
-        }
-
-
-        if (minimumPaths[0][0] === undefined) {
-            throw Error('AAAAAAA');
         }
 
         return minimumPaths[0][0]!;

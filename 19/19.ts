@@ -2,7 +2,7 @@ import * as fs from 'fs';
 
 export class AOC19 {
     private _day: string = '19';
-    private _test: boolean = true;
+    private _test: boolean = false;
     private _inputFile: string = this._test
         ? `./${this._day}/testInput.txt`
         : `./${this._day}/input.txt`;
@@ -18,25 +18,121 @@ export class AOC19 {
 
         const parsedInput = this.parseInput(input);
 
-        console.log(parsedInput);
+        let possible = 0;
+        for (const request of parsedInput.requests) {
+            console.log('evaluating request', request);
+            const towelsNeeded = this.minimumAmountOfTowelsNeededForThis(request, parsedInput.towels);
+            if (towelsNeeded !== undefined) {
+                possible++;
+            }
+        }
+
+        console.log(this._minimumAmountOfTowelsNeededCacheHits);
+        console.log(possible);
     }
 
     public partTwo(input: string): void {
         console.log('Solving part two...');
 
         const parsedInput = this.parseInput(input);
-        console.log('TODO');
+
+        let combinations = 0;
+        for (const request of parsedInput.requests) {
+            console.log('evaluating request', request);
+            const towelCombinations = this.possibleTowelCombinationsForThis(request, parsedInput.towels);
+            if (towelCombinations !== undefined) {
+                combinations += towelCombinations;
+            }
+        }
+
+        console.log(this._possibleTowelCombinationsCacheHits);
+        console.log(combinations);
     }
 
-    private parseInput(input: string): { towels: Towel[], requests: Color[][] } {
+    private parseInput(input: string): { towels: string[], requests: string[] } {
         const parts = input.split("\n\n");
 
-        const towels = parts[0].split(', ').map(rawTowel => rawTowel.split('')) as Towel[];
-        const requests = parts[1].split('\n').map(rawTowel => rawTowel.split('')) as Color[][];
+        const towels = parts[0].split(', ');
+        const requests = parts[1].split('\n');
 
         return {towels, requests};
     }
+
+    private _minimumAmountOfTowelsNeededCache: Map<string, number | undefined> = new Map([['', 1]]);
+    private _minimumAmountOfTowelsNeededCacheHits: number = 0;
+
+    private _possibleTowelCombinationsCache: Map<string, number | undefined> = new Map([['', 1]]);
+    private _possibleTowelCombinationsCacheHits: number = 0;
+
+    private minimumAmountOfTowelsNeededForThis(request: string, towels: string[]): number | undefined {
+        // console.log(this._cacheHits);
+        // console.log(this._minimumAmountOfTowelsNeededCache.size);
+        // console.log(request);
+        if (this._minimumAmountOfTowelsNeededCache.has(request)) {
+            this._minimumAmountOfTowelsNeededCacheHits++;
+            return this._minimumAmountOfTowelsNeededCache.get(request);
+        }
+
+        const setResult = (result: number | undefined): number | undefined => {
+            this._minimumAmountOfTowelsNeededCache.set(request, result);
+            return result;
+        }
+
+        const usableAtTheEnd = towels.filter(towel => request.endsWith(towel));
+        if (usableAtTheEnd.length === 0) {
+            return setResult(undefined);
+        }
+
+        const possibilities: number[] = [];
+        for (const usableTowel of usableAtTheEnd) {
+            const slicedRequest = request.slice(0, request.length - usableTowel.length);
+            const minimumTowelsForTheRest = this.minimumAmountOfTowelsNeededForThis(slicedRequest, towels);
+            if (minimumTowelsForTheRest !== undefined) {
+                possibilities.push(minimumTowelsForTheRest);
+            }
+        }
+
+        return possibilities.length === 0
+            ? setResult(undefined)
+            : setResult(Math.min(...possibilities));
+    }
+
+    private possibleTowelCombinationsForThis(request: string, towels: string[]): number | undefined {
+
+        // console.log(request);
+        // console.log(this._possibleTowelCombinationsCacheHits);
+        // console.log(this._possibleTowelCombinationsCache.size);
+
+        if (this._possibleTowelCombinationsCache.has(request)) {
+            this._possibleTowelCombinationsCacheHits++;
+            return this._possibleTowelCombinationsCache.get(request);
+        }
+
+        const setResult = (result: number | undefined): number | undefined => {
+            this._possibleTowelCombinationsCache.set(request, result);
+            return result;
+        }
+
+        const usableAtTheEnd = towels.filter(towel => request.endsWith(towel));
+        if (usableAtTheEnd.length === 0) {
+            return setResult(undefined);
+        }
+
+        const possibilities: number[] = [];
+        for (const usableTowel of usableAtTheEnd) {
+            const slicedRequest = request.slice(0, request.length - usableTowel.length);
+            const minimumTowelsForTheRest = this.possibleTowelCombinationsForThis(slicedRequest, towels);
+            if (minimumTowelsForTheRest !== undefined) {
+                possibilities.push(minimumTowelsForTheRest);
+            }
+        }
+
+        return possibilities.length === 0
+            ? setResult(undefined)
+            : setResult(sum(...possibilities));
+    }
 }
 
-type Color = 'r' | 'g' | 'u' | 'b' | 'w';
-type Towel = Color[];
+export function sum(...values: number[]): number {
+    return values.reduce((acc: number, v: number) => acc + v, 0);
+}
